@@ -1,0 +1,2061 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>SnusFit Pro</title>
+    <style>
+        /* --- CSS VARIABLER --- */
+        :root {
+            --bg-color: #0f0f12;
+            --container-bg: rgba(25, 25, 30, 0.96);
+            --text-main: #ffffff;
+            --text-sec: #a5a5a5;
+            --accent-snus: #2ecc71; 
+            --accent-train: #bb86fc; 
+            --accent-red: #e74c3c; 
+            --accent-blue: #3498db;
+            --input-bg: #1e1e24;
+            --nav-bg: #16161a;
+            --header-h: 55px;
+            --nav-h: 70px;
+        }
+
+        /* --- GRUNNLEGGENDE STYLING --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { 
+            height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; 
+            position: fixed; background-color: var(--bg-color); overscroll-behavior: none; 
+            font-family: 'Inter', -apple-system, sans-serif; color: var(--text-main); 
+        }
+        body { 
+            display: flex; flex-direction: column; 
+            background-image: radial-gradient(circle at top right, #1a1a2e 0%, #0f0f12 100%); 
+        }
+
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* --- UTILITY CLASSES --- */
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+        .flex-center { display: flex; justify-content: center; align-items: center; }
+        .flex-col { display: flex; flex-direction: column; }
+        .w-full { width: 100%; }
+        .w-auto { width: auto; }
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-sm { margin-bottom: 8px; }
+        .mb-md { margin-bottom: 15px; }
+        .mt-sm { margin-top: 8px; }
+        .mt-md { margin-top: 15px; }
+        .mt-0 { margin-top: 0 !important; }
+        .p-sm { padding: 10px; }
+        .p-md { padding: 15px; }
+        .flex-1 { flex: 1; overflow-y: auto; }
+        .flex-shrink-0 { flex-shrink: 0; }
+        
+        .text-xs { font-size: 0.65rem; }
+        .text-sm { font-size: 0.75rem; }
+        .text-lg { font-size: 1.2rem; }
+        .text-xl { font-size: 1.6rem; }
+        .font-bold { font-weight: 800; }
+        .font-black { font-weight: 900; }
+        .text-muted { color: var(--text-sec); }
+        .text-red { color: var(--accent-red); }
+        .text-snus { color: var(--accent-snus); }
+        .text-train { color: var(--accent-train); }
+        .uppercase { text-transform: uppercase; }
+        .gap-sm { gap: 8px; }
+        .gap-md { gap: 12px; }
+
+        /* --- LAYOUT KOMPONENTER --- */
+        header { 
+            height: calc(var(--header-h) + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); 
+            display: flex; align-items: center; justify-content: center; 
+            background: rgba(15, 15, 18, 0.9); backdrop-filter: blur(10px); 
+            border-bottom: 1px solid #222; flex-shrink: 0; 
+        }
+        header h1 { margin: 0; font-size: 1.1rem; letter-spacing: 2px; font-weight: 900; text-transform: none; }
+
+        main { 
+            flex: 1; overflow-y: auto; padding: 12px; display: flex; 
+            flex-direction: column; align-items: center; -webkit-overflow-scrolling: touch; 
+        }
+        
+        .content-wrapper { width: 100%; max-width: 420px; display: flex; flex-direction: column; flex: 1; }
+        .view { display: none; width: 100%; flex: 1; flex-direction: column; }
+        .active-view { display: flex; }
+
+        #snus-view { max-height: 100%; overflow: hidden; }
+        #snus-view .card:last-child { flex: 1; overflow: hidden; flex-shrink: 1; margin-bottom: 0; }
+        #snus-recent-log { flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-start; }
+
+        nav { 
+            height: calc(var(--nav-h) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); 
+            background: var(--nav-bg); display: flex; justify-content: space-around; 
+            align-items: center; border-top: 1px solid #333; flex-shrink: 0; 
+        }
+        .nav-item { 
+            color: var(--text-sec); text-decoration: none; font-size: 0.65rem; display: flex; 
+            flex-direction: column; align-items: center; gap: 4px; font-weight: 700; 
+            cursor: pointer; text-transform: uppercase; width: 33.3%; 
+        }
+        .nav-item.active { color: var(--text-main); }
+        .icon-circle { width: 26px; height: 26px; border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+
+        .card { background: var(--container-bg); padding: 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); flex-shrink: 0; }
+        
+        .bank-container { position: relative; width: 130px; height: 130px; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+        .bank-ring { position: absolute; width: 100%; height: 100%; transform: rotate(-90deg); }
+        .bank-ring circle { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; stroke-transition: stroke 0.3s ease;}
+        .counter { font-size: 2.8rem; font-weight: 900; transition: color 0.3s ease; }
+
+        .stats-summary { display: flex; gap: 10px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #333; }
+        .stat-box { flex: 1; text-align: center; }
+        .stat-val { display: block; font-size: 1.2rem; font-weight: 900; }
+        .stat-lab { font-size: 0.6rem; color: var(--text-sec); text-transform: uppercase; font-weight: 800; }
+
+        .streak-badge { background: rgba(255, 165, 0, 0.15); color: #ffa500; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; display: inline-block; margin-bottom: 10px; border: 1px solid rgba(255, 165, 0, 0.3); }
+
+        .btn { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 800; font-size: 0.95rem; cursor: pointer; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .btn-snus { background: var(--accent-snus); color: #000; }
+        .btn-train { background: var(--accent-train); color: #000; }
+        .btn-sec { background: transparent; color: var(--text-main); border: 1.5px solid #333; }
+        .btn-danger-outline { border-color: var(--accent-red); color: var(--accent-red); }
+        .btn-toggle-active { background: rgba(243, 156, 18, 0.15) !important; color: #f39c12 !important; border-color: #f39c12 !important; }
+
+        input, select { width: 100%; padding: 12px; background: var(--input-bg); border: 1.5px solid #333; border-radius: 10px; color: #fff; margin-bottom: 8px; outline: none; font-size: 16px; flex-shrink: 0; }
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1a1a1a; font-size: 0.8rem; }
+        .history-item:last-child { border-bottom: none; }
+        
+        .dot-container { display: flex; gap: 5px; flex-wrap: wrap; }
+        .dot-large { width: 12px; height: 12px; border-radius: 50%; background: #222; }
+        .dot-large.done { background: var(--accent-snus); box-shadow: 0 0 8px var(--accent-snus); }
+        .dot-large.bonus { background: var(--accent-train); box-shadow: 0 0 8px var(--accent-train); }
+        .dot-large.missed { background: var(--accent-red); opacity: 0.6; box-shadow: 0 0 4px rgba(231, 76, 60, 0.3); }
+
+        .timer-wrap { position: relative; width: 180px; height: 180px; margin: 0 auto 20px; }
+        .timer-svg { transform: rotate(-90deg); width: 180px; height: 180px; }
+        .timer-bg { fill: none; stroke: #222; stroke-width: 6; }
+        .timer-progress { fill: none; stroke: var(--accent-train); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+        .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3.5rem; font-weight: 900; color: var(--accent-train); }
+
+        #bg-rest-timer { display: none; background: rgba(187, 134, 252, 0.15); border: 1.5px solid var(--accent-train); border-radius: 12px; padding: 10px; margin-bottom: 15px; text-align: center; }
+
+        .timeline-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .timeline-chip { background: var(--input-bg); padding: 8px 6px; border-radius: 12px; font-size: 0.65rem; font-weight: 800; color: var(--text-sec); border: 1.5px solid transparent; display: flex; align-items: center; justify-content: center; gap: 4px; cursor: pointer; transition: all 0.3s ease; min-width: 0; }
+        .timeline-chip span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 100%; }
+        .timeline-chip.active { background: rgba(187, 134, 252, 0.15); border-color: var(--accent-train); color: var(--text-main); }
+        .timeline-chip.done { background: rgba(46, 204, 113, 0.15); border-color: var(--accent-snus); color: var(--text-main); }
+        .timeline-chip.skipped { background: rgba(255,255,255,0.05); border-color: #333; color: var(--text-sec); opacity: 0.6; }
+        .timeline-dot { width: 8px; height: 8px; border-radius: 50%; background: #444; flex-shrink: 0; }
+        .timeline-chip.active .timeline-dot { background: var(--accent-train); box-shadow: 0 0 8px var(--accent-train); }
+        .timeline-chip.done .timeline-dot { background: var(--accent-snus); box-shadow: 0 0 8px var(--accent-snus); }
+        .timeline-chip.skipped .timeline-dot { background: #222; box-shadow: none; }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background: var(--container-bg); padding: 20px; border-radius: 20px; width: 90%; max-width: 380px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; max-height: 90vh; }
+        
+        .amount-selector { display: flex; align-items: center; justify-content: space-between; background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1.5px solid #333; margin-bottom: 15px; }
+        .amount-btn { background: #333; color: white; border: none; border-radius: 8px; width: 45px; height: 45px; font-size: 1.4rem; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        #withdraw-display { font-size: 1.8rem; font-weight: 900; color: var(--accent-red); }
+        
+        .hold-btn { position: relative; overflow: hidden; background: transparent; border: 1.5px solid var(--accent-red); color: var(--text-main); user-select: none; -webkit-user-select: none; touch-action: none; margin-bottom: 8px; }
+        .btn-progress { position: absolute; left: 0; top: 0; bottom: 0; background: rgba(231, 76, 60, 0.4); width: 0%; pointer-events: none; transition: width 0.05s linear; }
+
+        .alt-chip { background: rgba(255,255,255,0.08); color: var(--text-sec); padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; border: 1px solid transparent; }
+
+        @keyframes flashAnim {
+            0% { background-color: #fff; transform: scale(0.95); }
+            100% { background-color: var(--accent-train); transform: scale(1); }
+        }
+        .flash-active { animation: flashAnim 0.3s ease-out; }
+
+        .view-toggle { display: flex; background: var(--input-bg); border-radius: 10px; padding: 4px; margin-bottom: 15px; border: 1.5px solid #333; }
+        .toggle-btn { flex: 1; text-align: center; padding: 8px 0; font-size: 0.75rem; font-weight: 800; border-radius: 8px; color: var(--text-sec); cursor: pointer; transition: all 0.2s; text-transform: uppercase; }
+        .toggle-btn.active { background: #333; color: var(--text-main); box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+
+        .history-list-card { display: flex; justify-content: space-between; align-items: center; padding: 14px 15px; background: var(--input-bg); border: 1px solid #333; border-radius: 12px; margin-bottom: 8px; }
+        .history-list-left { display: flex; align-items: center; gap: 12px; }
+        .history-list-date { font-weight: 800; color: var(--text-sec); font-size: 0.8rem; }
+        .history-list-data { font-weight: 900; font-size: 1.05rem; color: var(--text-main); display: flex; flex-direction: column; align-items: flex-end;}
+        .history-list-sub { font-size: 0.65rem; color: #888; font-weight: 800; text-transform: uppercase; }
+        
+        .svg-chart-container { width: 100%; height: 230px; position: relative; margin-top: 10px; }
+        .chart-legend { display: flex; justify-content: center; gap: 20px; font-size: 0.7rem; font-weight: 800; margin-bottom: 10px; }
+        .legend-item { display: flex; align-items: center; gap: 6px; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .mini-chart-container { display: flex; justify-content: space-around; align-items: flex-end; height: 120px; background: var(--input-bg); border-radius: 16px; border: 1.5px solid #333; padding: 10px 10px 5px 10px; margin-bottom: 20px; }
+        .chart-col { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; width: 18%; gap: 4px; }
+        .bar-wrap { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; width: 100%; max-width: 24px; border-radius: 6px; overflow: hidden; background: #2a2a35;}
+        .bar-reps { background: var(--accent-snus); width: 100%; transition: height 0.3s ease; }
+        .bar-weight { background: var(--accent-train); width: 100%; border-top: 1px solid rgba(0,0,0,0.3); transition: height 0.3s ease; }
+        .chart-label-top { font-size: 0.6rem; color: #fff; font-weight: 900; text-align: center; line-height: 1.2; white-space: nowrap; }
+        .chart-date { font-size: 0.6rem; color: var(--text-sec); font-weight: 800; white-space: nowrap; }
+        
+        .ex-tiles-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; padding-bottom: 5px; margin-bottom: 15px; flex-shrink: 0; }
+        .ex-tile { background: var(--input-bg); border: 1.5px solid #333; color: var(--text-sec); padding: 6px 12px; border-radius: 12px; font-size: 0.65rem; font-weight: 800; white-space: nowrap; cursor: pointer; transition: all 0.2s; user-select: none; }
+        .ex-tile.active { background: rgba(187, 134, 252, 0.15); border-color: var(--accent-train); color: var(--text-main); }
+
+        #landscape-view { display: none; position: fixed; inset: 0; background: var(--bg-color); z-index: 10000; flex-direction: column; }
+        @media (orientation: landscape) and (max-height: 600px) {
+            body > *:not(#landscape-view) { display: none !important; }
+            #landscape-view { display: flex !important; }
+        }
+        
+        .ls-header { height: 45px; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--text-main); font-size: 1.1rem; background: rgba(15, 15, 18, 0.95); border-bottom: 1px solid #333; padding: 0 20px; }
+        .ls-scroll-container { flex: 1; display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+        .ls-scroll-container::-webkit-scrollbar { display: none; }
+        .ls-slide { flex: 0 0 100vw; width: 100vw; height: 100%; scroll-snap-align: start; padding: 15px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; box-sizing: border-box; }
+        
+        .ls-hint { position: absolute; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.1); font-size: 2rem; pointer-events: none; z-index: 100; }
+        .ls-hint.left { left: 10px; }
+        .ls-hint.right { right: 10px; }
+    </style>
+</head>
+<body>
+
+    <header><h1>SnusFit</h1></header>
+
+    <main>
+        <div class="content-wrapper">
+            
+            <div id="snus-view" class="view active-view">
+                <div class="card text-center" style="padding: 20px 10px;">
+                    <div id="streak-container" class="mb-sm"></div>
+                    
+                    <div class="flex-center w-full gap-sm mt-md">
+                        <div class="flex-col flex-center flex-1">
+                            <div class="bank-container">
+                                <svg class="bank-ring"><circle cx="65" cy="65" r="55" stroke="#222"></circle><circle id="bank-progress" cx="65" cy="65" r="55" stroke="var(--accent-snus)" stroke-dasharray="346" stroke-dashoffset="346"></circle></svg>
+                                <div class="counter text-snus" id="snusCount" style="text-shadow: 0 0 15px rgba(46, 204, 113, 0.3);">0</div>
+                            </div>
+                            <p class="text-xs text-muted font-bold uppercase mt-sm mb-0">Bank</p>
+                        </div>
+
+                        <div class="flex-col flex-center flex-1">
+                            <div class="bank-container">
+                                <svg class="bank-ring"><circle cx="65" cy="65" r="55" stroke="#222"></circle><circle id="snus-free-progress" cx="65" cy="65" r="55" stroke="var(--accent-blue)" stroke-dasharray="346" stroke-dashoffset="346"></circle></svg>
+                                <div class="counter" id="snusFreeCount" style="color: var(--accent-blue); text-shadow: 0 0 15px rgba(52, 152, 219, 0.3);">0</div>
+                            </div>
+                            <p class="text-xs text-muted font-bold uppercase mt-sm mb-0">Dager snusfri</p>
+                            <button id="btn-pause-streak" class="btn-sec mb-0 mt-sm" style="padding: 4px 10px; font-size: 0.65rem; border-radius: 8px; width: auto; border: 1px dashed #555; transition: all 0.3s ease;">⏸️ Ferie / Pause</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <button class="btn btn-sec btn-danger-outline mb-0 text-sm" id="btn-withdraw-open">Uttak</button>
+                </div>
+                <div class="card flex-col" style="cursor: pointer;" data-tab="full-snus-log-view">
+                    <div class="flex-between mb-sm flex-shrink-0">
+                        <span class="text-xs font-bold uppercase text-muted">SISTE AKTIVITET</span>
+                        <span class="text-xs text-muted">Se alt ›</span>
+                    </div>
+                    <div id="snus-recent-log"></div>
+                </div>
+            </div>
+
+            <div id="train-view" class="view">
+                <div class="card" style="cursor: pointer;" data-tab="full-train-history-view">
+                    <p class="text-left mb-sm font-bold">Denne uken</p>
+                    <div id="current-week-dots" class="dot-container"></div>
+                    <p id="week-status-text" class="text-sm text-muted mt-sm mb-md"></p>
+                    
+                    <div style="border-top: 1px solid #333; padding-top: 15px;">
+                        <p class="text-xs text-muted mb-sm font-bold uppercase">Tidligere uker</p>
+                        <div id="training-recent-log"></div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                        <button class="btn btn-train mb-0" data-prompt-eq="okt1">Økt 1</button>
+                        <button class="btn btn-train mb-0" data-prompt-eq="okt2">Økt 2</button>
+                        <button class="btn btn-train mb-0" data-prompt-eq="okt3">Økt 3</button>
+                        <button class="btn btn-sec mb-0" data-prompt-bonus="true">🔥 Bonus</button>
+                    </div>
+                    <button class="btn btn-sec mb-0 text-train" style="border-color: var(--accent-train); font-size: 0.85rem;" id="btn-workout-modal-open">📝 Legg til gjennomført økt</button>
+                </div>
+
+                <div class="card">
+                    <p class="text-left mb-sm font-bold">📊 Vektlogg</p>
+                    <button class="btn btn-sec mb-0" style="border-color: #555;" id="btn-history-modal-open">Åpne Vektlogg</button>
+                </div>
+            </div>
+
+            <div id="system-view" class="view">
+                <div class="card">
+                    <p class="text-left mb-sm font-bold">Programbibliotek</p>
+                    <div class="flex-center gap-sm mb-sm">
+                        <button class="btn btn-sec flex-1 text-xs mb-0" data-template="grunnmur">Grunnmuren</button>
+                        <button class="btn btn-sec flex-1 text-xs mb-0" data-template="kroppsvekt">Kroppsvekt</button>
+                        <button class="btn btn-sec flex-1 text-xs mb-0" data-template="kettlebell">Kettlebell</button>
+                    </div>
+                    <p class="text-xs text-muted text-center mt-sm">Overskriver programmet. Historikk beholdes.</p>
+                </div>
+
+                <div class="card">
+                    <p class="text-left mb-sm font-bold">Ukesmål (Økter)</p>
+                    <input type="number" id="goal-input" min="1" max="7">
+                </div>
+                
+                <div class="card">
+                    <p class="text-left mb-sm font-bold">Rediger Program</p>
+                    <select id="edit-select">
+                        <option value="okt1">Økt 1</option>
+                        <option value="okt2">Økt 2</option>
+                        <option value="okt3">Økt 3</option>
+                        <option value="bonus">Bonus</option>
+                    </select>
+                    <div id="editor-fields"></div>
+                    <button class="btn btn-train mt-sm mb-0" id="btn-save-program">Lagre endringer</button>
+                </div>
+
+                <div class="card">
+                    <p class="text-left mb-sm font-bold">Data & Backup</p>
+                    <div class="flex-center gap-sm mb-md">
+                        <button class="btn btn-snus flex-1 text-xs mb-0" style="padding: 10px;" data-export="full">Full Backup</button>
+                        <button class="btn btn-snus flex-1 text-xs mb-0" style="padding: 10px;" data-export="history">Historikk</button>
+                        <button class="btn btn-snus flex-1 text-xs mb-0" style="padding: 10px;" data-export="program">Program</button>
+                    </div>
+                    <div class="flex-center gap-sm">
+                        <button class="btn btn-sec w-full text-sm mb-0" id="btn-import-click">📂 Last inn Backup</button>
+                        <input type="file" id="importFile" style="display:none">
+                    </div>
+                </div>
+            </div>
+
+            <div id="active-workout-view" class="view">
+                <div class="card p-md">
+                    <div class="flex-between mb-md">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <h1 id="ex-name" class="text-train text-xl mb-0" style="line-height: 1;"></h1>
+                            <button class="btn-sec flex-center" style="width: 32px; height: 32px; padding: 0; border-radius: 8px; border-color: #555;" id="btn-swap-ex">🔄</button>
+                            <button class="btn-sec flex-center" style="width: 32px; height: 32px; padding: 0; border-radius: 8px; border-color: #555; border-style: dashed;" id="btn-skip-ex">⏭️</button>
+                        </div>
+                        <button class="btn-sec w-auto btn-danger-outline mb-0 text-sm" style="padding: 6px 12px; border-radius: 8px;" id="btn-stop-workout">✖ Avslutt</button>
+                    </div>
+
+                    <div id="bg-rest-timer">
+                        <span class="text-sm font-bold text-train">Pause: <span id="bg-timer-display">0</span>s igjen</span>
+                    </div>
+                    
+                    <div id="workout-timeline" class="timeline-container"></div>
+                    
+                    <div class="text-center mb-md mt-sm">
+                        <p id="ex-target" class="font-bold text-muted text-sm mb-md" style="letter-spacing: 1px;"></p>
+                        <div id="set-dots" class="dot-container flex-center gap-md"></div>
+                    </div>
+                    
+                    <div class="text-center mb-md">
+                        <p class="text-xs text-muted uppercase font-bold mb-sm">Snitt siste 5 økter</p>
+                        <div id="mini-chart" class="mini-chart-container"></div>
+                    </div>
+
+                    <div id="stopwatch-container" class="flex-between p-sm mb-md" style="background: var(--input-bg); border-radius: 12px; border: 1.5px solid #333; display: none;">
+                        <span class="text-xs font-bold text-muted uppercase" style="line-height:1.2">Stoppe-<br>klokke</span>
+                        <div class="flex-center gap-sm">
+                            <span id="sw-display" class="font-black text-train" style="font-size: 1.2rem; width: 60px; text-align: right;">00:00</span>
+                            <button class="btn-sec w-auto mb-0" style="padding: 6px 10px; font-size:0.75rem;" id="btn-sw-start">Start</button>
+                            <button class="btn-sec w-auto mb-0" style="padding: 6px 10px; font-size:0.75rem;" id="btn-sw-reset">Nullstill</button>
+                        </div>
+                    </div>
+
+                    <div class="flex-col gap-md mb-md">
+                        <div class="flex-between p-md" style="background: var(--input-bg); border-radius: 16px; border: 1.5px solid #333;">
+                            <div class="text-left">
+                                <span class="text-xs text-muted font-bold uppercase mb-sm" style="display: block;">Vekt (kg)</span>
+                                <span id="last-weight-label" class="text-sm font-bold text-muted">Sist: -</span>
+                            </div>
+                            <div class="flex-center gap-sm">
+                                <button id="kv-toggle" class="btn-sec w-auto mb-0" style="padding: 6px 10px; border-radius: 8px; font-size: 0.8rem;">KV</button>
+                                <div class="amount-selector flex-center gap-sm mb-0" style="padding: 0; border: none; background: transparent;">
+                                    <button class="amount-btn" style="width: 35px; height: 35px; font-size: 1.2rem;" data-weight-adj="-0.5">-</button>
+                                    <input type="number" step="0.5" id="weight-input" placeholder="0" class="mb-0 text-center font-black" style="width: 70px; font-size: 1.8rem; padding: 0; background: transparent; border: none;">
+                                    <button class="amount-btn" style="width: 35px; height: 35px; font-size: 1.2rem;" data-weight-adj="0.5">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex-between p-md" style="background: var(--input-bg); border-radius: 16px; border: 1.5px solid #333;">
+                            <div class="text-left">
+                                <span id="reps-label-text" class="text-xs text-muted font-bold uppercase mb-sm" style="display: block;">Repetisjoner</span>
+                                <span id="last-reps-label" class="text-sm font-bold text-muted">Sist: -</span>
+                            </div>
+                            <div class="amount-selector flex-center gap-md mb-0" style="padding: 0; border: none; background: transparent;">
+                                <button class="amount-btn" style="width: 40px; height: 40px;" data-reps-adj="-1">-</button>
+                                <span id="reps-display" class="font-black text-main text-center" style="font-size: 2rem; min-width: 40px;">0</span>
+                                <button class="amount-btn" style="width: 40px; height: 40px;" data-reps-adj="1">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button id="complete-btn" class="btn btn-train text-lg p-md mb-0" style="border-radius: 16px;">Fullfør sett</button>
+                </div>
+            </div>
+
+            <div id="rest-view" class="view">
+                <div class="card text-center flex-1 flex-col flex-center">
+                    <div class="timer-wrap">
+                        <svg class="timer-svg">
+                            <circle class="timer-bg" cx="90" cy="90" r="85"></circle>
+                            <circle id="timer-bar" class="timer-progress" cx="90" cy="90" r="85" stroke-dasharray="534" stroke-dashoffset="0"></circle>
+                        </svg>
+                        <div class="timer-text" id="timer-display">90</div>
+                    </div>
+                    <p id="next-info" class="font-bold mb-md text-lg" style="line-height: 1.4;"></p>
+                    <button class="btn btn-sec mb-0" style="width:60%; margin:0 auto;" id="btn-skip-rest">Hopp over</button>
+                </div>
+            </div>
+
+            <div id="full-snus-log-view" class="view">
+                <button class="btn btn-sec w-auto mb-md flex-shrink-0" style="padding:8px 15px;" data-tab="snus-view">← Tilbake</button>
+                <div class="card flex-1 mb-0"><div id="snus-full-log"></div></div>
+            </div>
+
+            <div id="full-train-history-view" class="view">
+                <button class="btn btn-sec w-auto mb-md flex-shrink-0" style="padding:8px 15px;" data-tab="train-view">← Tilbake</button>
+                <div class="card flex-1 mb-0"><div id="training-full-log"></div></div>
+            </div>
+
+            <div id="cardio-menu-view" class="view">
+                <div class="flex-center w-full mb-md flex-shrink-0" style="position: relative; padding: 0 5px; height: 45px;">
+                    <button class="btn btn-sec w-auto mb-0" style="padding:8px 15px; position: absolute; left: 0;" data-tab="train-view">← Tilbake</button>
+                    <h2 class="text-lg mt-0 mb-0">Velg Kardio</h2>
+                </div>
+                <div class="flex-1 mb-0 flex-col gap-md" style="overflow-y:auto; background: transparent; border: none; padding: 0; box-shadow: none;" id="cardio-list">
+                    </div>
+            </div>
+
+            <div id="cardio-active-view" class="view">
+                <div class="card flex-1 flex-col flex-center text-center">
+                    <div id="cardio-total-time" class="text-xs text-muted font-bold uppercase mb-md" style="letter-spacing: 1px;">Totalt igjen: 00:00</div>
+                    
+                    <h2 id="cardio-active-title" class="text-sec mt-0 mb-sm text-sm uppercase font-bold"></h2>
+                    <h3 id="cardio-active-step" class="text-train mt-0 mb-sm font-black" style="min-height:30px; font-size: 2rem;">Klar?</h3>
+                    
+                    <div id="cardio-time-display" style="font-size: 5rem; font-weight: 900; color: var(--text-main); font-variant-numeric: tabular-nums; margin-bottom: 5px;">00:00</div>
+                    
+                    <p id="cardio-next-step" class="text-sm text-muted mb-md font-bold" style="min-height: 20px;"></p>
+                    
+                    <div class="flex-center gap-md mb-md w-full" id="cardio-controls">
+                        <button class="btn btn-sec flex-1" id="btn-cardio-playpause" style="font-size: 1.1rem; padding: 15px;">Start</button>
+                        <button class="btn btn-sec flex-1" id="btn-cardio-skip" style="font-size: 1.1rem; padding: 15px;">Hopp over</button>
+                    </div>
+                    
+                    <button class="btn btn-snus mt-auto" id="btn-cardio-finish" style="padding: 15px; font-size: 1.1rem; display: none;">Fullfør økt (+1 Snus 🟢)</button>
+                    <button class="btn btn-sec btn-danger-outline mt-sm" style="border:none;" id="btn-cardio-cancel">Avbryt økt</button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="landscape-view">
+        <div class="ls-header" id="ls-dynamic-title">Laster...</div>
+        <div class="ls-hint left">‹</div>
+        <div class="ls-hint right">›</div>
+        <div class="ls-scroll-container" id="ls-scroll-container"></div>
+    </div>
+
+    <div id="bonus-choice-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-center text-train mt-0 mb-md">Velg Bonusøkt</h3>
+            <div class="flex-col gap-md">
+                <button class="btn btn-sec mb-0" data-bonus-choice="styrke" style="padding: 18px; font-size: 1.1rem;">🏋️ Bonus Styrke</button>
+                <button class="btn btn-sec mb-0" data-bonus-choice="kardio" style="padding: 18px; font-size: 1.1rem;">🏃 Kardio</button>
+                <button class="btn btn-sec mb-0 btn-danger-outline" onclick="document.getElementById('bonus-choice-modal').classList.remove('active');" style="padding: 18px; font-size: 1.1rem; border: none;">Avbryt</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="equipment-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-center text-train mt-0 mb-md">Hvor trener du?</h3>
+            <div class="flex-col gap-sm">
+                <button class="btn btn-sec mb-0" data-eq="gym">🏋️ Gym (Aktiv Program)</button>
+                <button class="btn btn-sec mb-0" data-eq="kroppsvekt">🤸 Kroppsvekt</button>
+                <button class="btn btn-sec mb-0" data-eq="kettlebell">🪨 Kettlebell</button>
+                <button class="btn btn-sec mb-0" data-eq="mix">🪨+🤸 KB (4kg/10kg) & Kroppsvekt</button>
+            </div>
+            <button class="btn btn-sec mt-md mb-0 btn-danger-outline" id="btn-close-eq">Avbryt</button>
+        </div>
+    </div>
+
+    <div id="history-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-center mt-0 mb-md flex-shrink-0">Vektlogg</h3>
+            <div id="ex-tiles-container" class="ex-tiles-container"></div>
+            
+            <div class="view-toggle flex-shrink-0">
+                <div class="toggle-btn active" id="toggle-graph" data-hist-view="graph">Graf</div>
+                <div class="toggle-btn" id="toggle-list" data-hist-view="list">Liste</div>
+            </div>
+
+            <div id="manual-history-form" style="display:none; flex-direction: column; gap: 8px; background: var(--input-bg); border-radius: 12px; border: 1px dashed #555; padding: 12px; margin-bottom: 15px;">
+                <input type="date" id="man-hist-date" class="mb-0 text-sm w-full" style="padding: 8px;">
+                <div style="display: grid; grid-template-columns: auto 1fr 1fr auto; gap: 8px; align-items: center;">
+                    <button id="man-hist-kv" class="btn-sec mb-0" style="padding: 8px 10px; border-radius:8px; font-size: 0.8rem; height: 100%;">KV</button>
+                    <input type="number" step="0.5" id="man-hist-w" placeholder="Kg" class="mb-0 text-sm" style="padding: 8px; width: 100%; height: 100%;">
+                    <input type="number" id="man-hist-r" placeholder="R/S" class="mb-0 text-sm" style="padding: 8px; width: 100%; height: 100%;">
+                    <button class="btn-train mb-0 text-sm" style="padding: 8px 12px; border-radius:8px; height: 100%;" id="btn-add-man-hist">+</button>
+                </div>
+            </div>
+
+            <div id="history-content-area" class="flex-1 mb-md" style="padding-right: 5px;"></div>
+            <button class="btn btn-sec flex-shrink-0 mb-0" id="btn-close-hist">Lukk</button>
+        </div>
+    </div>
+
+    <div id="workout-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-center text-train mt-0 mb-md">Registrer trening</h3>
+            <select id="workoutSelect">
+                <option value="💪 Styrketrening">💪 Styrketrening</option>
+                <option value="🎾 Squash">🎾 Squash</option>
+                <option value="🧗 Klatring">🧗 Klatring</option>
+                <option value="🏃 Løpetur">🏃 Løpetur</option>
+            </select>
+            <input type="date" id="snusDate">
+            <button class="btn btn-train" id="btn-submit-manual-workout">Lagre økt (+1 i banken)</button>
+            <button class="btn btn-sec mb-0" id="btn-close-workout-modal">Avbryt</button>
+        </div>
+    </div>
+    
+    <div id="withdraw-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="text-center text-red mt-0 mb-md">Registrer uttak</h3>
+            <div class="amount-selector">
+                <button class="amount-btn" data-withdraw-adj="-1">-</button>
+                <span id="withdraw-display">1</span>
+                <button class="amount-btn" data-withdraw-adj="1">+</button>
+            </div>
+            <button id="hold-withdraw-btn" class="btn hold-btn">
+                <div id="withdraw-progress" class="btn-progress"></div>
+                <span style="position:relative; z-index:1">Hold inne for å ta ut</span>
+            </button>
+            <button class="btn btn-sec mb-0" id="btn-close-withdraw">Avbryt</button>
+        </div>
+    </div>
+
+    <nav>
+        <div class="nav-item active" id="nav-snus" data-tab="snus-view">
+            <div class="icon-circle"><span aria-hidden="true">📦</span></div><span>Bank</span>
+        </div>
+        <div class="nav-item" id="nav-train" data-tab="train-view">
+            <div class="icon-circle"><span aria-hidden="true">🏋️</span></div><span>Trening</span>
+        </div>
+        <div class="nav-item" id="nav-system" data-tab="system-view">
+            <div class="icon-circle"><span aria-hidden="true">⚙️</span></div><span>System</span>
+        </div>
+    </nav>
+
+    <script>
+        const Haptics = {
+            success: () => navigator.vibrate?.([50, 30, 50]),
+            tick: () => navigator.vibrate?.(10),
+            heavy: () => navigator.vibrate?.([100, 50, 100]),
+            error: () => navigator.vibrate?.([200, 100, 200])
+        };
+
+        function playTone() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.frequency.value = 880; 
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.5);
+            osc.start(); osc.stop(ctx.currentTime + 0.5);
+        }
+
+        const esc = (str) => {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        };
+
+        function safeSetItem(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (e) {
+                alert("Lagring feilet! Enheten din er muligens tom for lagringsplass. Frigjør plass for å unngå tap av data.");
+                console.error("Storage error:", e);
+            }
+        }
+
+        function safeJSONParse(key, fallback) {
+            try { const val = localStorage.getItem(key); return val ? JSON.parse(val) : fallback; } 
+            catch (e) { return fallback; }
+        }
+
+        const fmtW = (w, isKV) => isKV ? (w > 0 ? `KV + ${w}kg` : `KV`) : `${w}kg`;
+        const fmtR = (r, isTime) => isTime ? `${r}s` : `${r} reps`;
+
+        function getExKey(name) {
+            if (!name) return "ukjent";
+            return name.toLowerCase().replace(/[^a-z0-9æøå]/g, '');
+        }
+
+        function migrateToNameBasedData() {
+            if(localStorage.getItem('MIGRATED_TO_NAMES_V3')) return;
+
+            const legacy = {
+                "e1_1": "Knebøy", "e1_2": "Benkpress", "e1_3": "Kabelroing (smalt)", "e1_4": "Facepulls", "e1_5": "Planke",
+                "e2_1": "Markløft", "e2_2": "Arnoldpress", "e2_3": "Pull-ups", "e2_4": "Dips", "e2_5": "Toes to bar",
+                "e3_1": "Bulgarsk utfall", "e3_2": "RDL (Hantler)", "e3_3": "Skråbenk", "e3_4": "1-arm hantelroing", "e3_5": "Sidehev",
+                "b_1": "Kabel-flyes (Høy til lav)", "b_2": "Kabel-flyes (Lav til høy)", "b_3": "Bicepscurl 21-ere", "b_4": "Skullcrushers + smalpress", "b_5": "Kabeltvist Høy til lav",
+                "bw1_1": "Knebøyhopp / Pistol", "bw1_2": "Push-ups", "bw1_3": "Inverted Rows", "bw1_4": "Pike Push-ups", "bw1_5": "Planke",
+                "bw2_1": "Ettbeins Glute Bridge", "bw2_2": "Handstand Hold / Pike", "bw2_3": "Pull-ups / Chins", "bw2_4": "Dips / Diamond Push-ups", "bw2_5": "Liggende beinhev",
+                "bw3_1": "Bulgarsk utfall", "bw3_2": "Nordic Hamstring / Glute bridge", "bw3_3": "Decline Push-ups", "bw3_4": "Inverted Rows", "bw3_5": "Håndkle Sidehev",
+                "mix1_1": "Goblet Squat (10kg)", "mix1_2": "Push-ups", "mix1_3": "KB Roing (10kg)", "mix1_4": "KB Halo (4kg)", "mix1_5": "Planke",
+                "mix2_1": "KB RDL (10kg)", "mix2_2": "1-arm KB Press (10kg)", "mix2_3": "Pull-ups / Inverted Rows", "mix2_4": "Dips / Diamond Push-ups", "mix2_5": "Liggende beinhev",
+                "mix3_1": "KB Bulgarsk (10kg)", "mix3_2": "KB Swings (10kg)", "mix3_3": "Decline Push-ups", "mix3_4": "1-arm KB Roing (10kg)", "mix3_5": "KB Halo / Skulderpress (4kg)",
+                "dyn_tricepsextension": "Triceps-ekstensjon", "dyn_pullups": "Pull-ups", "dyn_abwheel": "Ab-wheel", "dyn_mageikabel": "Mage i kabel",
+                "dyn_flyesopp": "Kabel-flyes (Lav til høy)", "dyn_flyesned": "Kabel-flyes (Høy til lav)", "dyn_tricepspushdown": "Triceps-nedpress", "dyn_triceps": "Triceps-nedpress",
+                "dyn_planke": "Planke"
+            };
+
+            for (let [oldId, correctName] of Object.entries(legacy)) {
+                let newKey = getExKey(correctName);
+                ['TR_hist_', 'TR_w_', 'TR_r_', 'TR_kv_'].forEach(prefix => {
+                    let oldData = localStorage.getItem(prefix + oldId);
+                    if (oldData) {
+                        let existingNew = localStorage.getItem(prefix + newKey);
+                        if(!existingNew) {
+                            localStorage.setItem(prefix + newKey, oldData);
+                        }
+                    }
+                });
+            }
+            localStorage.setItem('MIGRATED_TO_NAMES_V3', 'true');
+        }
+
+        let wakeLock = null;
+        const WakeLockAPI = {
+            request: async () => {
+                try {
+                    if ('wakeLock' in navigator && wakeLock === null) {
+                        wakeLock = await navigator.wakeLock.request('screen');
+                    }
+                } catch (err) { console.log('Wake Lock feilet:', err); }
+            },
+            release: async () => {
+                try {
+                    if (wakeLock !== null) {
+                        await wakeLock.release();
+                        wakeLock = null;
+                    }
+                } catch (err) { console.log('Wake Lock release feilet:', err); }
+            }
+        };
+
+        document.addEventListener('visibilitychange', async () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                wakeLock = null; 
+                await WakeLockAPI.request();
+            }
+        });
+
+        function updateWakeLock() {
+            let needsLock = (AppState.timer.interval !== null) || AppState.stopwatch.running || cardioState.running;
+            if (needsLock) { WakeLockAPI.request(); } else { WakeLockAPI.release(); }
+        }
+
+
+        const defProgram = {
+            okt1: { title: "Økt 1", exercises: [
+                { name: "Knebøy", sets: 3, reps: "5-8", rest: 120 },
+                { name: "Benkpress", sets: 3, reps: "6-8", rest: 90 },
+                { name: "Kabelroing (smalt)", sets: 3, reps: "8-10", rest: 90 },
+                { name: "Facepulls", sets: 3, reps: "15-20", rest: 60 },
+                { name: "Planke", sets: 3, reps: "45s", rest: 60 }
+            ]},
+            okt2: { title: "Økt 2", exercises: [
+                { name: "Markløft", sets: 3, reps: "5-8", rest: 120 },
+                { name: "Arnoldpress", sets: 3, reps: "8-10", rest: 90 },
+                { name: "Nedtrekk", sets: 3, reps: "8-10", rest: 90 },
+                { name: "Dips", sets: 3, reps: "Maks", rest: 90 },
+                { name: "Toes to bar", sets: 3, reps: "8-12", rest: 60 }
+            ]},
+            okt3: { title: "Økt 3", exercises: [
+                { name: "Bulgarsk utfall", sets: 3, reps: "8-12", rest: 90 },
+                { name: "RDL (Hantler)", sets: 3, reps: "10-12", rest: 90 },
+                { name: "Skråbenk", sets: 3, reps: "8-10", rest: 90 },
+                { name: "1-arm hantelroing", sets: 3, reps: "8-10", rest: 90 },
+                { name: "Sidehev", sets: 3, reps: "15-20", rest: 60 }
+            ]},
+            bonus: { title: "Bonus", exercises: [
+                { name: "Bicepscurl", sets: 3, reps: "10-12", rest: 60 },
+                { name: "Triceps-nedpress", sets: 3, reps: "10-12", rest: 60 },
+                { name: "Push-ups", sets: 3, reps: "Maks", rest: 60 },
+                { name: "Goblet Squat", sets: 3, reps: "15", rest: 60 },
+                { name: "Russian Twists", sets: 3, reps: "20s", rest: 60 }
+            ]}
+        };
+
+        const bwProgram = {
+            okt1: { title: "Kroppsvekt Økt 1", exercises: [
+                { name: "Knebøyhopp / Pistol", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Push-ups", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Inverted Rows", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Pike Push-ups", sets: 3, reps: "8-12", rest: 60 },
+                { name: "Planke", sets: 3, reps: "60s", rest: 60 }
+            ]},
+            okt2: { title: "Kroppsvekt Økt 2", exercises: [
+                { name: "Ettbeins Glute Bridge", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Handstand Hold / Pike", sets: 3, reps: "30s", rest: 90 },
+                { name: "Pull-ups / Chins", sets: 3, reps: "Maks", rest: 120 },
+                { name: "Dips / Diamond Push-ups", sets: 3, reps: "Maks", rest: 90 },
+                { name: "Liggende beinhev", sets: 3, reps: "15", rest: 60 }
+            ]},
+            okt3: { title: "Kroppsvekt Økt 3", exercises: [
+                { name: "Bulgarsk utfall", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Nordic Hamstring / Glute bridge", sets: 3, reps: "8-12", rest: 90 },
+                { name: "Decline Push-ups", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Inverted Rows", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Håndkle Sidehev", sets: 3, reps: "15", rest: 60 }
+            ]},
+            bonus: { title: "Kroppsvekt Bonus", exercises: [
+                { name: "Chins (Biceps)", sets: 3, reps: "Maks", rest: 60 },
+                { name: "Diamond Push-ups", sets: 3, reps: "10-15", rest: 60 },
+                { name: "Push-ups", sets: 3, reps: "Maks", rest: 60 },
+                { name: "Knebøyhopp", sets: 3, reps: "15-20", rest: 60 },
+                { name: "Russian Twists", sets: 3, reps: "45s", rest: 60 }
+            ]}
+        };
+
+        const kbProgram = {
+            okt1: { title: "Kettlebell Økt 1", exercises: [
+                { name: "Goblet Squat", sets: 3, reps: "10-12", rest: 90 },
+                { name: "KB Floor Press", sets: 3, reps: "10-12", rest: 90 },
+                { name: "KB Roing", sets: 3, reps: "10-12", rest: 90 },
+                { name: "KB High Pull / Halo", sets: 3, reps: "10-12", rest: 60 },
+                { name: "KB Planke-trekk", sets: 3, reps: "45s", rest: 60 }
+            ]},
+            okt2: { title: "Kettlebell Økt 2", exercises: [
+                { name: "KB RDL", sets: 3, reps: "12-15", rest: 90 },
+                { name: "1-arm KB Press", sets: 3, reps: "8-10", rest: 90 },
+                { name: "KB Renegade Row", sets: 3, reps: "8-10", rest: 90 },
+                { name: "Smale KB Push-ups", sets: 3, reps: "Maks", rest: 60 },
+                { name: "KB V-ups", sets: 3, reps: "12-15", rest: 60 }
+            ]},
+            okt3: { title: "Kettlebell Økt 3", exercises: [
+                { name: "KB Bulgarsk utfall", sets: 3, reps: "10-12", rest: 90 },
+                { name: "KB Swings", sets: 3, reps: "15-20", rest: 90 },
+                { name: "KB Skråpress (Floor)", sets: 3, reps: "10-12", rest: 90 },
+                { name: "1-arm KB Roing", sets: 3, reps: "10-12", rest: 90 },
+                { name: "KB Halo / Sidehev", sets: 3, reps: "10-12", rest: 60 }
+            ]},
+            bonus: { title: "Kettlebell Bonus", exercises: [
+                { name: "KB Bicepscurl", sets: 3, reps: "10-12", rest: 60 },
+                { name: "KB Triceps Ext", sets: 3, reps: "10-12", rest: 60 },
+                { name: "KB Push-ups", sets: 3, reps: "Maks", rest: 60 },
+                { name: "Goblet Squat", sets: 3, reps: "15", rest: 60 },
+                { name: "KB Russian Twists", sets: 3, reps: "20", rest: 60 }
+            ]}
+        };
+
+        const mixProgram = {
+            okt1: { title: "Mix Økt 1", exercises: [
+                { name: "Goblet Squat (10kg)", sets: 3, reps: "10-15", rest: 90 },
+                { name: "Push-ups", sets: 3, reps: "10-15", rest: 90 },
+                { name: "KB Roing (10kg)", sets: 3, reps: "10-12", rest: 90 },
+                { name: "KB Halo (4kg)", sets: 3, reps: "10-12", rest: 60 },
+                { name: "Planke", sets: 3, reps: "60s", rest: 60 }
+            ]},
+            okt2: { title: "Mix Økt 2", exercises: [
+                { name: "KB RDL (10kg)", sets: 3, reps: "12-15", rest: 90 },
+                { name: "1-arm KB Press (10kg)", sets: 3, reps: "8-10", rest: 90 },
+                { name: "Pull-ups / Inverted Rows", sets: 3, reps: "Maks", rest: 120 },
+                { name: "Dips / Diamond Push-ups", sets: 3, reps: "Maks", rest: 60 },
+                { name: "Liggende beinhev", sets: 3, reps: "15", rest: 60 }
+            ]},
+            okt3: { title: "Mix Økt 3", exercises: [
+                { name: "KB Bulgarsk (10kg)", sets: 3, reps: "8-12", rest: 90 },
+                { name: "KB Swings (10kg)", sets: 3, reps: "15-20", rest: 90 },
+                { name: "Decline Push-ups", sets: 3, reps: "10-15", rest: 90 },
+                { name: "1-arm KB Roing (10kg)", sets: 3, reps: "10-12", rest: 90 },
+                { name: "KB Halo / Skulderpress (4kg)", sets: 3, reps: "10-12", rest: 60 }
+            ]},
+            bonus: { title: "Mix Bonus", exercises: [
+                { name: "KB Bicepscurl (10kg/4kg)", sets: 3, reps: "10-12", rest: 60 },
+                { name: "Diamond Push-ups", sets: 3, reps: "10-15", rest: 60 },
+                { name: "Push-ups", sets: 3, reps: "Maks", rest: 60 },
+                { name: "Goblet Squat (10kg)", sets: 3, reps: "15", rest: 60 },
+                { name: "KB Russian Twists (4kg)", sets: 3, reps: "20", rest: 60 }
+            ]}
+        };
+
+        const AppState = {
+            snus: { 
+                total: parseInt(localStorage.getItem('SB_total')) || 0, 
+                history: safeJSONParse('SB_history', []),
+                isPaused: localStorage.getItem('SB_isPaused') === 'true',
+                pausedAt: parseInt(localStorage.getItem('SB_pausedAt')) || null,
+                pauseOffset: parseInt(localStorage.getItem('SB_pauseOffset')) || 0
+            },
+            training: { goal: parseInt(localStorage.getItem('TR_goal')) || 3, activeWeeks: safeJSONParse('TR_active_weeks', []), program: safeJSONParse('TR_program', defProgram) },
+            workout: { active: null, curIdx: 0, curSets: [], fin: [], skipped: [], reps: 0, isKV: false, isTime: false },
+            timer: { interval: null, timeLeft: 0, totalRest: 0, targetTime: 0 },
+            stopwatch: { interval: null, startTime: 0, elapsed: 0, running: false },
+            historyModal: { exKey: null, exName: null, mode: 'graph' },
+            withdraw: { amount: 1, isHolding: false, holdStartTime: 0, lastTickTime: 0, raf: null }
+        };
+
+        const cardioData = [
+            {
+                id: '4x4', name: 'Norsk 4x4',
+                desc: 'Klassikeren for VO2-maks! 4 minutter hard løping, 3 minutter aktiv hvile. Gjentas 4 ganger.',
+                steps: [
+                    { t: 'Oppvarming', s: 300 },
+                    { t: 'Hardt', s: 240 }, { t: 'Hvile', s: 180 },
+                    { t: 'Hardt', s: 240 }, { t: 'Hvile', s: 180 },
+                    { t: 'Hardt', s: 240 }, { t: 'Hvile', s: 180 },
+                    { t: 'Hardt', s: 240 }, { t: 'Nedtrapping', s: 180 }
+                ]
+            },
+            {
+                id: 'pyramide', name: 'Pyramideintervaller',
+                desc: 'Bygg opp og ned: 1, 2, 3, 4, 3, 2, 1 minutt hard løping. 1 min pause mellom.',
+                steps: [
+                    { t: 'Oppvarming', s: 300 },
+                    { t: 'Hardt (1 min)', s: 60 }, { t: 'Hvile', s: 60 },
+                    { t: 'Hardt (2 min)', s: 120 }, { t: 'Hvile', s: 60 },
+                    { t: 'Hardt (3 min)', s: 180 }, { t: 'Hvile', s: 60 },
+                    { t: 'Hardt (4 min)', s: 240 }, { t: 'Hvile', s: 60 },
+                    { t: 'Hardt (3 min)', s: 180 }, { t: 'Hvile', s: 60 },
+                    { t: 'Hardt (2 min)', s: 120 }, { t: 'Hvile', s: 60 },
+                    { t: 'Hardt (1 min)', s: 60 }, { t: 'Nedtrapping', s: 180 }
+                ]
+            },
+            {
+                id: '4515', name: 'Korte & Kjappe (45/15)',
+                desc: '45 sekunder hardt, 15 sekunder rolig hvile. Gjentas 15 ganger.',
+                getSteps: () => {
+                    let s = [{t: 'Oppvarming', s: 300}];
+                    for(let i=1; i<=15; i++) { s.push({t: `Spurt ${i}/15`, s: 45}, {t: 'Hvile', s: 15}); }
+                    s.push({t: 'Nedtrapping', s: 180}); return s;
+                }
+            },
+            {
+                id: 'bakke', name: 'Bakkedrag',
+                desc: '30-45 sekunder bratt spurt opp bakke, gå rolig ned igjen. Gjentas 10 ganger.',
+                getSteps: () => {
+                    let s = [{t: 'Oppvarming til bakke', s: 300}];
+                    for(let i=1; i<=10; i++) { s.push({t: `Bakkespurt ${i}/10`, s: 45}, {t: 'Gå ned igjen', s: 90}); }
+                    s.push({t: 'Nedtrapping', s: 180}); return s;
+                }
+            },
+            {
+                id: 'terskel', name: 'Terskelintervaller',
+                desc: '"Komfortabelt hardt" tempo (sone 3). 3 drag på 8 minutter.',
+                steps: [
+                    { t: 'Oppvarming', s: 300 },
+                    { t: 'Terskel 1', s: 480 }, { t: 'Hvile', s: 120 },
+                    { t: 'Terskel 2', s: 480 }, { t: 'Hvile', s: 120 },
+                    { t: 'Terskel 3', s: 480 }, { t: 'Nedtrapping', s: 180 }
+                ]
+            },
+            {
+                id: 'fartlek', name: 'Fartlek ("Speed Play")',
+                desc: 'Lek med farten! Tilfeldige drag på 30, 45 og 60 sek. med rolig jogg i mellom. Ca 20 min totalt.',
+                getSteps: () => {
+                    let s = [{t: 'Oppvarming', s: 300}];
+                    const durations = [30, 45, 60];
+                    for(let i=1; i<=8; i++) { 
+                        let sprintTime = durations[Math.floor(Math.random() * durations.length)];
+                        s.push({t: `Fartslek ${i}/8`, s: sprintTime}, {t: 'Rolig jogg', s: 60}); 
+                    }
+                    s.push({t: 'Nedtrapping', s: 180}); return s;
+                }
+            }
+        ];
+
+        let cardioState = {
+            active: null,
+            interval: null,
+            running: false,
+            stepIdx: 0,
+            timeInStep: 0,
+            totalTimeLeft: 0
+        };
+
+        window.onload = () => { 
+            migrateToNameBasedData(); 
+            document.getElementById('snusDate').valueAsDate = new Date();
+            document.getElementById('man-hist-date').valueAsDate = new Date();
+            document.getElementById('goal-input').value = AppState.training.goal;
+            updateSnusUI(); 
+            updateSnusFreeUI();
+            setInterval(updateSnusFreeUI, 1000); 
+            sync(); 
+            loadEditor(); 
+            renderLandscapeGraphs();
+            renderCardioMenu();
+            setupEventListeners();
+        };
+
+        window.addEventListener('resize', () => { if(window.innerWidth > window.innerHeight && window.innerHeight < 600) renderLandscapeGraphs(); });
+
+        function showView(id) { 
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view')); 
+            document.getElementById(id).classList.add('active-view');
+        }
+
+        function showTab(id) { 
+            showView(id); 
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active')); 
+            let navId = id.includes('full') || id.includes('cardio') ? (id.includes('snus') ? 'nav-snus' : 'nav-train') : 'nav-' + id.split('-')[0];
+            if(document.getElementById(navId)) document.getElementById(navId).classList.add('active'); 
+        }
+
+        function updateGoal(val) { AppState.training.goal = parseInt(val); safeSetItem('TR_goal', AppState.training.goal); sync(); }
+
+        /* --- NY FUNKSJON FOR Å SETTE SNUS-STREAK PÅ PAUSE --- */
+        function toggleSnusPause() {
+            if (AppState.snus.isPaused) {
+                // Gjennopta
+                if (AppState.snus.pausedAt) {
+                    AppState.snus.pauseOffset += (Date.now() - AppState.snus.pausedAt);
+                }
+                AppState.snus.isPaused = false;
+                AppState.snus.pausedAt = null;
+                
+                safeSetItem('SB_isPaused', 'false');
+                localStorage.removeItem('SB_pausedAt');
+                safeSetItem('SB_pauseOffset', AppState.snus.pauseOffset);
+                Haptics.success();
+            } else {
+                // Sett på pause
+                if(confirm("Vil du sette snusfri-telleren i Ferie-modus?\n\nTelleren fryses, og eventuelle uttak du gjør nå vil trekke fra banken, men IKKE ødelegge streaken din!")) {
+                    AppState.snus.isPaused = true;
+                    AppState.snus.pausedAt = Date.now();
+                    safeSetItem('SB_isPaused', 'true');
+                    safeSetItem('SB_pausedAt', AppState.snus.pausedAt);
+                    Haptics.tick();
+                }
+            }
+            updateSnusFreeUI();
+        }
+
+        /* --- OPPDATERT SNUS-LOGGING --- */
+        function changeSnus(amount, isWorkout = false, type = null) {
+            if(amount < 0 && AppState.snus.total <= 0) { Haptics.error(); return; }
+            const selectedDate = document.getElementById('snusDate').value || new Date().toISOString().split('T')[0];
+            AppState.snus.total += amount;
+            let fType = type || (amount > 0 ? document.getElementById('workoutSelect').value : "💸 Uttak");
+            
+            let ts = Date.now();
+            let todayStr = new Date().toISOString().split('T')[0];
+            if (selectedDate !== todayStr) {
+                let d = new Date(selectedDate);
+                d.setHours(12, 0, 0, 0); 
+                ts = d.getTime();
+            }
+
+            let ignoreStreak = false;
+            if (amount < 0) {
+                if (AppState.snus.isPaused) {
+                    ignoreStreak = true; // Ødelegger ikke streak
+                    if(!fType.includes("Pause") && !fType.includes("🌴")) fType = "🌴 " + fType + " (Pause)";
+                } else {
+                    // Hvis ikke på pause, resettes streaken, og vi fjerner eventuell lagret pause-tid
+                    AppState.snus.pauseOffset = 0;
+                    safeSetItem('SB_pauseOffset', 0);
+                }
+            }
+
+            AppState.snus.history.push({ date: selectedDate, type: fType, change: amount, isWorkout: isWorkout, ts: ts, ignoreForStreak: ignoreStreak });
+            saveData();
+            if(amount < 0) updateSnusFreeUI();
+            isWorkout ? Haptics.heavy() : Haptics.success();
+        }
+
+        function saveData() { safeSetItem('SB_total', AppState.snus.total); safeSetItem('SB_history', JSON.stringify(AppState.snus.history)); updateSnusUI(); sync(); }
+
+        function formatHistoryTypeStr(type) {
+            return type.replace(/Uttak (🧊|🟤)/g, "💸 Uttak").replace(/^(?:💪 )?Gains:/, "💪 Gains:");
+        }
+
+        function updateSnusUI() {
+            document.getElementById('snusCount').innerText = AppState.snus.total;
+            const offset = 346 - (Math.min(AppState.snus.total, 24) / 24) * 346;
+            document.getElementById('bank-progress').style.strokeDashoffset = offset;
+            
+            document.getElementById('snus-recent-log').innerHTML = AppState.snus.history.slice(-5).reverse().map(item => {
+                let typeStr = formatHistoryTypeStr(item.type);
+                return `<div class="history-item"><span>${esc(typeStr)}</span><span class="${item.change > 0 ? 'text-snus' : 'text-red'}">${item.change > 0 ? '+' : ''}${item.change}</span></div>`;
+            }).join('');
+
+            let earned = 0, used = 0;
+            AppState.snus.history.forEach(i => i.change > 0 ? earned += i.change : used += Math.abs(i.change));
+            const statsHeader = `<div class="stats-summary"><div class="stat-box"><span class="stat-val text-snus">${earned}</span><span class="stat-lab">Tjent</span></div><div class="stat-box"><span class="stat-val text-red">${used}</span><span class="stat-lab">Brukt</span></div></div>`;
+            document.getElementById('snus-full-log').innerHTML = statsHeader + AppState.snus.history.slice().reverse().map((item, idx) => {
+                let typeStr = formatHistoryTypeStr(item.type);
+                return `<div class="history-item"><span>${esc(item.date)} - ${esc(typeStr)}</span><div class="flex-center gap-md"><span class="${item.change > 0 ? 'text-snus' : 'text-red'}">${item.change > 0 ? '+' : ''}${item.change}</span><button class="btn-sec w-auto" style="padding:2px 8px;" data-del-snus="${AppState.snus.history.length-1-idx}">×</button></div></div>`;
+            }).join('');
+        }
+
+        /* --- OPPDATERT MED FERIEMODUS (PAUSE) --- */
+        function updateSnusFreeUI() {
+            let lastSnusTime = null;
+            let history = AppState.snus.history;
+            
+            // Leter etter det siste uttaket som FAKTISK brøt streaken
+            for (let i = history.length - 1; i >= 0; i--) {
+                if (history[i].change < 0 && !history[i].ignoreForStreak) {
+                    if (history[i].ts) {
+                        lastSnusTime = history[i].ts;
+                    } else {
+                        let d = new Date(history[i].date);
+                        if (!isNaN(d.getTime())) {
+                            d.setHours(12, 0, 0, 0);
+                            lastSnusTime = d.getTime();
+                        } else {
+                            lastSnusTime = Date.now();
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (!lastSnusTime && history.length > 0) {
+                let firstEntry = history[0];
+                let d = new Date(firstEntry.date);
+                if (!isNaN(d.getTime())) {
+                    d.setHours(12, 0, 0, 0);
+                    lastSnusTime = d.getTime();
+                }
+            }
+
+            let container = document.getElementById('snusFreeCount');
+            let ring = document.getElementById('snus-free-progress');
+            let pauseBtn = document.getElementById('btn-pause-streak');
+
+            // Oppdaterer farger basert på pause-status
+            if (AppState.snus.isPaused) {
+                if (pauseBtn) {
+                    pauseBtn.innerHTML = "▶️ Gjenoppta";
+                    pauseBtn.style.borderColor = "#f39c12";
+                    pauseBtn.style.color = "#f39c12";
+                }
+                ring.setAttribute('stroke', '#f39c12');
+                container.style.color = '#f39c12';
+                container.style.textShadow = "0 0 15px rgba(243, 156, 18, 0.3)";
+            } else {
+                if (pauseBtn) {
+                    pauseBtn.innerHTML = "⏸️ Ferie / Pause";
+                    pauseBtn.style.borderColor = "#555";
+                    pauseBtn.style.color = "var(--text-sec)";
+                }
+                ring.setAttribute('stroke', 'var(--accent-blue)');
+                container.style.color = 'var(--accent-blue)';
+                container.style.textShadow = "0 0 15px rgba(52, 152, 219, 0.3)";
+            }
+
+            if (!lastSnusTime) {
+                container.innerText = "0";
+                ring.style.strokeDashoffset = 346;
+                return;
+            }
+
+            // Hvis på pause, fryser vi slutt-tiden. Uansett trekker vi fra oppsamlet pause-tid
+            let endTime = AppState.snus.isPaused && AppState.snus.pausedAt ? AppState.snus.pausedAt : Date.now();
+            let diffMs = endTime - lastSnusTime - (AppState.snus.pauseOffset || 0);
+            
+            if (diffMs < 0) diffMs = 0; 
+
+            let msInDay = 1000 * 60 * 60 * 24;
+            let days = Math.floor(diffMs / msInDay);
+            let remainderMs = diffMs % msInDay;
+            
+            let progress = remainderMs / msInDay; 
+            
+            container.innerText = days;
+            
+            let offset = 346 - (progress * 346);
+            ring.style.strokeDashoffset = offset;
+        }
+
+        function deleteEntry(i) { 
+            if(confirm("Slett loggføring?\nMerk: Dette fjerner bare poenget fra banken. Treningshistorikk (grafer) må slettes separat under 'Vektlogg'.")) { 
+                AppState.snus.total -= AppState.snus.history[i].change; 
+                AppState.snus.history.splice(i, 1); 
+                saveData(); 
+                updateSnusFreeUI();
+            } 
+        }
+
+        function renderDots(count, goal, isPastWeek = false) {
+            const totalDots = Math.max(count, goal);
+            let dotsHtml = "";
+            for (let i = 0; i < totalDots; i++) {
+                if (i < goal) dotsHtml += `<div class="dot-large ${i < count ? "done" : (isPastWeek ? "missed" : "")}"></div>`;
+                else if (i < count) dotsHtml += `<div class="flex-center" style="font-size: 13px; width: 12px; height: 12px;">🔥</div>`; 
+            }
+            return dotsHtml;
+        }
+
+        function sync() {
+            let wc = {}; AppState.training.activeWeeks = []; let totalWorkoutCount = 0;
+            AppState.snus.history.forEach(i => {
+                if(i.isWorkout || ["Styrke", "Gains", "Økt", "Squash", "Klatring", "Løpetur", "🏃"].some(t => i.type.includes(t))) {
+                    totalWorkoutCount++;
+                    const d = new Date(i.date); d.setDate(d.getDate() + 4 - (d.getDay()||7));
+                    const w = "W" + Math.ceil((((d - new Date(d.getFullYear(),0,1))/86400000)+1)/7);
+                    wc[w] = (wc[w] || 0) + 1;
+                    if(!AppState.training.activeWeeks.includes(w)) AppState.training.activeWeeks.push(w);
+                }
+            });
+            AppState.training.activeWeeks.sort((a,b) => parseInt(a.replace('W','')) - parseInt(b.replace('W','')));
+            let streak = 0;
+            for(let wk of [...AppState.training.activeWeeks].reverse()) { if((wc[wk] || 0) >= AppState.training.goal) streak++; else break; }
+            document.getElementById('streak-container').innerHTML = streak >= 2 ? `<div class="streak-badge">🔥 ${streak} UKER TRENINGS-STREAK</div>` : '';
+
+            const d_now = new Date(); d_now.setDate(d_now.getDate() + 4 - (d_now.getDay()||7));
+            const curW = "W" + Math.ceil((((d_now - new Date(d_now.getFullYear(),0,1))/86400000)+1)/7);
+            const count = wc[curW] || 0;
+            
+            document.getElementById('current-week-dots').innerHTML = renderDots(count, AppState.training.goal, false);
+            document.getElementById('week-status-text').innerText = `${count} av ${AppState.training.goal} mål fullført`;
+
+            const statsHeader = `<div class="stats-summary flex-center"><div class="stat-box"><span class="stat-val text-train">${totalWorkoutCount}</span><span class="stat-lab">Totalt antall økter</span></div></div>`;
+            const logHtml = (wks) => wks.map(wk => `<div class="log-row history-item"><span>Uke ${esc(wk.replace('W',''))}</span><div class="dot-container">${renderDots(wc[wk] || 0, AppState.training.goal, wk !== curW)}</div></div>`).join('');
+            
+            const pastWeeksOnly = AppState.training.activeWeeks.filter(w => w !== curW);
+            document.getElementById('training-recent-log').innerHTML = pastWeeksOnly.length > 0 ? logHtml(pastWeeksOnly.slice(-2).reverse()) : '<p class="text-xs text-muted text-center">Ingen tidligere uker registrert enda.</p>';
+            document.getElementById('training-full-log').innerHTML = statsHeader + logHtml(AppState.training.activeWeeks.slice().reverse());
+        }
+
+        function renderCardioMenu() {
+            document.getElementById('cardio-list').innerHTML = cardioData.map((c, i) => {
+                let steps = c.getSteps ? c.getSteps() : c.steps;
+                let totalSecs = steps.reduce((sum, step) => sum + step.s, 0);
+                let mins = Math.ceil(totalSecs / 60);
+
+                return `
+                <button class="card btn-sec text-left mb-0" style="position:relative; justify-content: flex-start; gap: 15px; padding: 18px; height: auto; min-height: 80px; align-items: center; border: 1.5px solid #333;" data-start-cardio="${i}">
+                    <span style="position:absolute; top: 12px; right: 12px; font-size: 0.7rem; font-weight: 800; color: var(--text-sec); background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 10px;">~${mins} min</span>
+                    <div style="background: rgba(187,134,252,0.15); border-radius: 12px; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0;">🏃</div>
+                    <div class="flex-col" style="flex:1; overflow:hidden; padding-right: 40px;">
+                        <span class="font-bold text-main" style="font-size: 1.05rem; white-space: normal;">${esc(c.name)}</span>
+                        <span class="text-xs text-muted" style="font-weight: normal; white-space: normal; line-height:1.4; margin-top: 4px;">${esc(c.desc)}</span>
+                    </div>
+                </button>
+                `;
+            }).join('');
+        }
+
+        function startCardio(index) {
+            let c = cardioData[index];
+            cardioState.active = c;
+            if(c.getSteps) c.steps = c.getSteps();
+            
+            cardioState.totalTimeLeft = cardioState.active.steps.reduce((sum, step) => sum + step.s, 0);
+            cardioState.running = false;
+            cardioState.stepIdx = 0;
+            cardioState.timeInStep = 0;
+            clearInterval(cardioState.interval);
+            
+            document.getElementById('cardio-active-title').innerText = c.name;
+            let btn = document.getElementById('btn-cardio-playpause');
+            btn.innerText = 'Start';
+            btn.classList.remove('btn-danger-outline');
+            
+            document.getElementById('cardio-controls').style.display = 'flex';
+            document.getElementById('btn-cardio-cancel').style.display = 'block';
+            document.getElementById('btn-cardio-finish').style.display = 'none';
+            
+            updateCardioUI();
+            showTab('cardio-active-view');
+        }
+
+        function updateCardioUI() {
+            let displayEl = document.getElementById('cardio-time-display');
+            let stepEl = document.getElementById('cardio-active-step');
+            let nextEl = document.getElementById('cardio-next-step');
+            let totalEl = document.getElementById('cardio-total-time');
+            
+            if(!cardioState.active || !cardioState.active.steps) return;
+
+            totalEl.innerText = `Totalt igjen: ${formatTime(Math.max(0, cardioState.totalTimeLeft * 1000))}`;
+
+            if (cardioState.stepIdx >= cardioState.active.steps.length) {
+                stepEl.innerText = "Økt fullført! 🎉";
+                displayEl.innerText = "00:00";
+                nextEl.innerText = "Trykk på fullfør for å få snus i banken!";
+                
+                document.getElementById('cardio-controls').style.display = 'none';
+                document.getElementById('btn-cardio-cancel').style.display = 'none';
+                document.getElementById('btn-cardio-finish').style.display = 'block';
+                
+                clearInterval(cardioState.interval);
+                cardioState.running = false;
+                updateWakeLock();
+            } else {
+                let step = cardioState.active.steps[cardioState.stepIdx];
+                stepEl.innerText = step.t;
+                let left = step.s - cardioState.timeInStep;
+                displayEl.innerText = formatTime(left * 1000);
+                
+                let nextStep = cardioState.active.steps[cardioState.stepIdx + 1];
+                nextEl.innerText = nextStep ? `Neste: ${nextStep.t} (${formatTime(nextStep.s * 1000)})` : "Neste: Ferdig!";
+            }
+        }
+
+        function toggleCardio() {
+            let btn = document.getElementById('btn-cardio-playpause');
+            if(cardioState.running) {
+                clearInterval(cardioState.interval);
+                cardioState.running = false;
+                btn.innerText = 'Fortsett';
+                btn.classList.remove('btn-danger-outline');
+            } else {
+                cardioState.running = true;
+                btn.innerText = 'Pause';
+                btn.classList.add('btn-danger-outline');
+                
+                cardioState.interval = setInterval(() => {
+                    cardioState.timeInStep++;
+                    cardioState.totalTimeLeft--;
+                    
+                    let step = cardioState.active.steps[cardioState.stepIdx];
+                    if(step && cardioState.timeInStep >= step.s) {
+                        cardioState.stepIdx++;
+                        cardioState.timeInStep = 0;
+                        Haptics.heavy(); 
+                        playTone();
+                    }
+                    updateCardioUI();
+                }, 1000);
+            }
+            updateWakeLock();
+        }
+
+        function skipCardioStep() {
+            if(!cardioState.active || cardioState.stepIdx >= cardioState.active.steps.length) return;
+            let step = cardioState.active.steps[cardioState.stepIdx];
+            let leftInStep = step.s - cardioState.timeInStep;
+            cardioState.totalTimeLeft -= leftInStep;
+            cardioState.stepIdx++;
+            cardioState.timeInStep = 0;
+            Haptics.tick();
+            updateCardioUI();
+        }
+
+        function finishCardioSession() {
+            clearInterval(cardioState.interval);
+            cardioState.running = false;
+            updateWakeLock();
+            changeSnus(1, true, "🏃 " + cardioState.active.name);
+            alert("Kardio fullført! Du har gjort deg fortjent til 1 snus! 🎉🟢");
+            showTab('train-view');
+        }
+
+        function formatTime(ms) {
+            let totalSeconds = Math.floor(ms / 1000);
+            let mins = Math.floor(totalSeconds / 60);
+            let secs = totalSeconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        function updateStopwatchUI() { document.getElementById('sw-display').innerText = formatTime(AppState.stopwatch.elapsed); }
+        function toggleStopwatch() {
+            if(AppState.stopwatch.running) {
+                clearInterval(AppState.stopwatch.interval);
+                AppState.stopwatch.running = false;
+            } else {
+                AppState.stopwatch.startTime = Date.now() - AppState.stopwatch.elapsed;
+                AppState.stopwatch.interval = setInterval(() => { AppState.stopwatch.elapsed = Date.now() - AppState.stopwatch.startTime; updateStopwatchUI(); }, 1000);
+                AppState.stopwatch.running = true;
+                Haptics.tick();
+            }
+            updateWakeLock();
+        }
+        function resetStopwatch() { clearInterval(AppState.stopwatch.interval); AppState.stopwatch.elapsed = 0; AppState.stopwatch.running = false; updateStopwatchUI(); Haptics.tick(); updateWakeLock(); }
+
+        let pendingWorkoutId = null;
+
+        function promptEquipmentSelection(id) {
+            pendingWorkoutId = id;
+            document.getElementById('equipment-modal').classList.add('active');
+        }
+
+        function closeEquipmentModal() {
+            document.getElementById('equipment-modal').classList.remove('active');
+        }
+
+        function confirmEquipment(eqType) {
+            let id = pendingWorkoutId; 
+            closeEquipmentModal();
+            pendingWorkoutId = null; 
+            
+            if (id) startWorkout(id, eqType);
+        }
+
+        function startWorkout(id, eqType = 'gym') { 
+            Haptics.success();
+            
+            let progSource = AppState.training.program[id];
+            if (eqType === 'kroppsvekt') progSource = bwProgram[id];
+            else if (eqType === 'kettlebell') progSource = kbProgram[id];
+            else if (eqType === 'mix') progSource = mixProgram[id];
+
+            AppState.workout.active = JSON.parse(JSON.stringify(progSource)); 
+            AppState.workout.active.sessionData = {}; 
+            AppState.workout.curIdx = 0; 
+            AppState.workout.curSets = new Array(AppState.workout.active.exercises.length).fill(0); 
+            AppState.workout.fin = []; 
+            AppState.workout.skipped = [];
+            resetStopwatch();
+            clearRest(); 
+            renderEx(); 
+            showTab('active-workout-view'); 
+        }
+
+        function stopWorkout() { clearRest(); resetStopwatch(); showTab('train-view'); }
+        
+        function toggleKV() { AppState.workout.isKV = !AppState.workout.isKV; document.getElementById('kv-toggle').classList.toggle('btn-toggle-active', AppState.workout.isKV); Haptics.tick(); }
+
+        function swapCurrentExercise() {
+            let ex = AppState.workout.active.exercises[AppState.workout.curIdx];
+            let alts = getAlternatives(ex.name);
+            let suggestionText = alts.length > 0 ? "Forslag: " + alts.join(", ") : "F.eks: Push-ups, Goblet Squat...";
+            
+            let newName = prompt(`Hvilken øvelse vil du bytte til for denne økten?\n\n${suggestionText}`, ex.name);
+            
+            if (newName && newName.trim() !== "" && newName !== ex.name) {
+                ex.name = newName;
+                AppState.workout.curSets[AppState.workout.curIdx] = 0;
+                
+                let exKey = getExKey(newName);
+                if(AppState.workout.active.sessionData) AppState.workout.active.sessionData[exKey] = [];
+                
+                renderEx();
+                Haptics.success();
+            }
+        }
+
+        function renderEx() {
+            const ex = AppState.workout.active.exercises[AppState.workout.curIdx];
+            const exKey = getExKey(ex.name);
+            
+            AppState.workout.isTime = /\d+s/i.test(ex.reps);
+            
+            document.getElementById('reps-label-text').innerText = AppState.workout.isTime ? "SEKUNDER" : "REPETISJONER";
+            
+            document.getElementById('stopwatch-container').style.display = AppState.workout.isTime ? 'flex' : 'none';
+
+            const prevWeight = localStorage.getItem('TR_w_' + exKey);
+            const prevReps = localStorage.getItem('TR_r_' + exKey);
+            const prevKV = localStorage.getItem('TR_kv_' + exKey) === 'true';
+            
+            AppState.workout.isKV = prevKV;
+            document.getElementById('kv-toggle').classList.toggle('btn-toggle-active', AppState.workout.isKV);
+            
+            document.getElementById('ex-name').innerText = ex.name;
+            document.getElementById('ex-target').innerText = `Mål: ${ex.reps}`;
+            
+            let dotsHtml = ''; let completedSets = AppState.workout.curSets[AppState.workout.curIdx];
+            for(let i = 1; i <= ex.sets; i++) {
+                if(i <= completedSets) dotsHtml += `<div class="dot-large bonus"></div>`; 
+                else if (i === completedSets + 1) dotsHtml += `<div class="dot-large" style="border: 2px solid var(--accent-train); background: transparent;"></div>`; 
+                else dotsHtml += `<div class="dot-large"></div>`; 
+            }
+            document.getElementById('set-dots').innerHTML = dotsHtml;
+            
+            document.getElementById('last-weight-label').innerText = prevWeight ? `Sist: ${fmtW(prevWeight, prevKV)}` : "Sist: -";
+            document.getElementById('last-reps-label').innerText = prevReps ? `Sist: ${fmtR(prevReps, AppState.workout.isTime)}` : "Sist: -";
+            
+            document.getElementById('weight-input').value = prevWeight || "";
+            
+            if (prevReps) { AppState.workout.reps = parseInt(prevReps) || 0; } 
+            else { const match = ex.reps.match(/\d+/); AppState.workout.reps = match ? parseInt(match[0]) : (AppState.workout.isTime ? 30 : 10); }
+            document.getElementById('reps-display').innerText = AppState.workout.reps;
+
+            document.getElementById('workout-timeline').innerHTML = AppState.workout.active.exercises.map((e, i) => {
+                let statusClass = AppState.workout.fin.includes(i) ? "done" : (AppState.workout.skipped && AppState.workout.skipped.includes(i) ? "skipped" : (AppState.workout.curIdx === i ? "active" : ""));
+                return `<div class="timeline-chip ${statusClass}" data-timeline-idx="${i}"><div class="timeline-dot"></div><span>${esc(e.name)}</span></div>`;
+            }).join('');
+
+            const btn = document.getElementById('complete-btn');
+            if(btn) btn.style.display = completedSets >= ex.sets ? 'none' : 'block';
+
+            renderMiniChart(exKey);
+        }
+
+        function adjustWeight(change) {
+            let current = parseFloat(document.getElementById('weight-input').value) || 0;
+            let newVal = Math.max(0, current + change);
+            document.getElementById('weight-input').value = newVal;
+            Haptics.tick();
+        }
+
+        function renderMiniChart(exKey) {
+            let hist = safeJSONParse('TR_hist_' + exKey, []);
+            const chartEl = document.getElementById('mini-chart');
+            if(hist.length === 0) { chartEl.innerHTML = '<p class="text-sm text-center w-full text-muted mb-0">Ingen historikk.</p>'; return; }
+
+            let last5 = hist.slice(-5);
+            let maxW = Math.max(...last5.map(h => parseFloat(h.w))) || 1;
+            let maxR = Math.max(...last5.map(h => parseInt(h.r))) || 1;
+
+            chartEl.innerHTML = last5.map(h => {
+                let wPct = (parseFloat(h.w) / maxW) * 45; let rPct = (parseInt(h.r) / maxR) * 45;   
+                return `
+                <div class="chart-col">
+                    <div class="chart-label-top">
+                        <span class="text-train">${esc(h.kv ? (h.w>0?'KV+'+h.w:'KV') : h.w)}<span style="font-size:0.45rem;">${h.kv&&h.w==0?'':'kg'}</span></span><br>
+                        <span class="text-snus">${esc(h.r)}<span style="font-size:0.45rem;">${h.isTime ? 's' : 'r'}</span></span>
+                    </div>
+                    <div class="bar-wrap"><div class="bar-reps" style="height:${rPct}%"></div><div class="bar-weight" style="height:${wPct}%"></div></div>
+                    <div class="chart-date">${esc(h.date).substring(0, 5)}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function adjustWorkoutReps(change) {
+            let newAmount = AppState.workout.reps + change;
+            if (newAmount >= 0) { AppState.workout.reps = newAmount; document.getElementById('reps-display').innerText = AppState.workout.reps; Haptics.tick(); }
+        }
+
+        function skipExercise() {
+            if(!confirm("Vil du hoppe over denne øvelsen?")) return;
+            
+            if(!AppState.workout.skipped) AppState.workout.skipped = [];
+            if(!AppState.workout.skipped.includes(AppState.workout.curIdx)) {
+                AppState.workout.skipped.push(AppState.workout.curIdx);
+            }
+            
+            let next = AppState.workout.active.exercises.findIndex((_, i) => !AppState.workout.fin.includes(i) && !AppState.workout.skipped.includes(i));
+            
+            if(next !== -1) { 
+                AppState.workout.curIdx = next; 
+                renderEx(); 
+            } else { 
+                finish(); 
+            }
+        }
+
+        function completeSet() {
+            clearRest();
+
+            const ex = AppState.workout.active.exercises[AppState.workout.curIdx];
+            const exKey = getExKey(ex.name);
+            const weightVal = parseFloat(document.getElementById('weight-input').value) || 0;
+            const repsVal = AppState.workout.reps; 
+            const kvVal = AppState.workout.isKV;
+            const timeVal = AppState.workout.isTime;
+
+            if (AppState.workout.skipped && AppState.workout.skipped.includes(AppState.workout.curIdx)) {
+                AppState.workout.skipped = AppState.workout.skipped.filter(id => id !== AppState.workout.curIdx);
+            }
+
+            const btn = document.getElementById('complete-btn');
+            btn.classList.add('flash-active'); setTimeout(() => btn.classList.remove('flash-active'), 300); Haptics.tick();
+
+            if(!AppState.workout.active.sessionData) AppState.workout.active.sessionData = {};
+            if(!AppState.workout.active.sessionData[exKey]) AppState.workout.active.sessionData[exKey] = [];
+            AppState.workout.active.sessionData[exKey].push({w: weightVal, r: repsVal, kv: kvVal, isTime: timeVal});
+
+            let setsData = AppState.workout.active.sessionData[exKey];
+            let avgW = (setsData.reduce((sum, s) => sum + s.w, 0) / setsData.length).toFixed(1);
+            let avgR = Math.round(setsData.reduce((sum, s) => sum + s.r, 0) / setsData.length);
+            let useKV = setsData[setsData.length-1].kv;
+            let useTime = setsData[setsData.length-1].isTime;
+
+            let hist = safeJSONParse('TR_hist_' + exKey, []);
+            let today = new Date().toLocaleDateString('no-NO', {day: '2-digit', month: '2-digit', year: '2-digit'});
+            
+            let todayIdx = hist.findIndex(h => h.date === today);
+            if(todayIdx >= 0) { hist[todayIdx] = { date: today, w: avgW, r: avgR, kv: useKV, isTime: useTime }; } 
+            else { hist.push({ date: today, w: avgW, r: avgR, kv: useKV, isTime: useTime }); }
+            safeSetItem('TR_hist_' + exKey, JSON.stringify(hist));
+
+            safeSetItem('TR_w_' + exKey, weightVal);
+            safeSetItem('TR_r_' + exKey, repsVal);
+            safeSetItem('TR_kv_' + exKey, kvVal);
+            
+            renderMiniChart(exKey);
+            renderLandscapeGraphs();
+            
+            AppState.workout.curSets[AppState.workout.curIdx]++; 
+            
+            if(AppState.workout.curSets[AppState.workout.curIdx] < ex.sets) { 
+                startRest(ex.rest || 60, "Neste sett: " + ex.name, false, null); 
+            } else { 
+                if(!AppState.workout.fin.includes(AppState.workout.curIdx)) AppState.workout.fin.push(AppState.workout.curIdx);
+                
+                let next = AppState.workout.active.exercises.findIndex((_, i) => !AppState.workout.fin.includes(i) && (!AppState.workout.skipped || !AppState.workout.skipped.includes(i)));
+                if(next !== -1) { 
+                    AppState.workout.curIdx = next; 
+                    let nextEx = AppState.workout.active.exercises[next];
+                    startRest(ex.rest || 60, "Neste øvelse: " + nextEx.name, true, nextEx.name); 
+                } else { 
+                    finish(); 
+                } 
+            }
+        }
+
+        function clearRest() {
+            clearInterval(AppState.timer.interval);
+            AppState.timer.interval = null;
+            document.getElementById('bg-rest-timer').style.display = 'none';
+            updateWakeLock();
+        }
+
+        function startRest(s, info, isFirstSet, nextExName) { 
+            showView('rest-view'); 
+            
+            let displayInfo = info;
+            if (isFirstSet && nextExName) {
+                let hist = safeJSONParse('TR_hist_' + getExKey(nextExName), []);
+                if(hist.length > 0) {
+                    let last = hist[hist.length - 1];
+                    let wStr = fmtW(last.w, last.kv);
+                    let rStr = fmtR(last.r, last.isTime);
+                    displayInfo += `<br><span class="text-sm text-muted" style="font-weight:normal;">Sist: ${wStr} x ${rStr}</span>`;
+                }
+            }
+            
+            document.getElementById('next-info').innerHTML = displayInfo; 
+            AppState.timer.totalRest = s; AppState.timer.timeLeft = s; AppState.timer.targetTime = Date.now() + (s * 1000);
+            let lastTick = s; 
+            
+            updateTimerUI();
+            clearInterval(AppState.timer.interval); 
+            
+            updateWakeLock();
+            
+            AppState.timer.interval = setInterval(() => { 
+                AppState.timer.timeLeft = Math.round((AppState.timer.targetTime - Date.now()) / 1000);
+                if (AppState.timer.timeLeft < 0) AppState.timer.timeLeft = 0; 
+                updateTimerUI();
+                if(AppState.timer.timeLeft <= 0) { Haptics.heavy(); playTone(); skipRest(); clearRest(); } 
+                else if(AppState.timer.timeLeft <= 3 && AppState.timer.timeLeft !== lastTick) { Haptics.tick(); lastTick = AppState.timer.timeLeft; }
+            }, 500); 
+        }
+
+        function updateTimerUI() {
+            document.getElementById('timer-display').innerText = AppState.timer.timeLeft;
+            const offset = (AppState.timer.timeLeft / AppState.timer.totalRest) * 534;
+            document.getElementById('timer-bar').style.strokeDashoffset = 534 - offset;
+            document.getElementById('bg-timer-display').innerText = AppState.timer.timeLeft;
+        }
+
+        function skipRest() { 
+            document.getElementById('rest-view').classList.remove('active-view');
+            document.getElementById('active-workout-view').classList.add('active-view');
+            
+            if (AppState.timer.timeLeft > 0 && AppState.timer.interval) {
+                document.getElementById('bg-rest-timer').style.display = 'block';
+            }
+            renderEx(); 
+        }
+        
+        function finish() { changeSnus(1, true, "💪 Gains: " + AppState.workout.active.title); alert("Økt fullført! +1 i banken."); clearRest(); resetStopwatch(); showTab('train-view'); }
+
+        function getExercisesWithHistory() {
+            let available = [];
+            Object.values(AppState.training.program).forEach(wk => { wk.exercises.forEach(ex => {
+                let exKey = getExKey(ex.name);
+                let hist = safeJSONParse('TR_hist_' + exKey, []);
+                if (hist && hist.length > 0 && !available.find(a => a.key === exKey)) available.push({ key: exKey, name: ex.name, repsTarget: ex.reps });
+            });});
+            return available;
+        }
+
+        function openHistoryModalDefault() {
+            let available = getExercisesWithHistory();
+            if (available.length === 0) return alert("Du har ikke logget noen øvelser enda.");
+            let defaultEx = available.find(ex => ex.name.toLowerCase().includes("knebøy")) || available[0];
+            AppState.historyModal.exKey = defaultEx.key; AppState.historyModal.exName = defaultEx.name;
+            renderExerciseTiles(available); document.getElementById('history-modal').classList.add('active'); switchHistoryView('graph');
+        }
+
+        function renderExerciseTiles(available) {
+            document.getElementById('ex-tiles-container').innerHTML = available.map(ex => `<div class="ex-tile ${ex.key === AppState.historyModal.exKey ? 'active' : ''}" data-ex-key="${esc(ex.key)}" data-ex-name="${esc(ex.name)}">${esc(ex.name)}</div>`).join('');
+        }
+
+        function changeHistoryExerciseTile(key, name, element) {
+            AppState.historyModal.exKey = key; AppState.historyModal.exName = name;
+            document.querySelectorAll('.ex-tile').forEach(t => t.classList.remove('active')); element.classList.add('active'); Haptics.tick(); renderHistoryContent();
+        }
+
+        function switchHistoryView(mode) {
+            AppState.historyModal.mode = mode;
+            document.getElementById('toggle-list').classList.remove('active'); document.getElementById('toggle-graph').classList.remove('active'); document.getElementById('toggle-' + mode).classList.add('active');
+            
+            document.getElementById('manual-history-form').style.display = mode === 'list' ? 'flex' : 'none';
+            Haptics.tick(); renderHistoryContent();
+        }
+
+        function addManualHistory() {
+            const d = document.getElementById('man-hist-date').value;
+            const w = document.getElementById('man-hist-w').value;
+            const r = document.getElementById('man-hist-r').value;
+            const kv = document.getElementById('man-hist-kv').classList.contains('btn-toggle-active');
+            
+            if(!d || w==="" || r==="") return alert("Fyll inn dato, vekt og reps/sekunder");
+            
+            let hist = safeJSONParse('TR_hist_' + AppState.historyModal.exKey, []);
+            let isTime = false;
+            let available = getExercisesWithHistory();
+            let currentExDef = available.find(a => a.key === AppState.historyModal.exKey);
+            
+            if(currentExDef && currentExDef.repsTarget && /\d+s/i.test(currentExDef.repsTarget)) isTime = true;
+
+            let [year, month, day] = d.split('-');
+            let formattedDate = `${day}.${month}.${year.substring(2)}`;
+
+            hist.push({ date: formattedDate, w: parseFloat(w), r: parseInt(r), kv: kv, isTime: isTime });
+            
+            hist.sort((a,b) => {
+                let da = a.date.split('.'); let db = b.date.split('.');
+                let dateA = new Date('20'+da[2], da[1]-1, da[0]); let dateB = new Date('20'+db[2], db[1]-1, db[0]);
+                return dateA - dateB;
+            });
+
+            safeSetItem('TR_hist_' + AppState.historyModal.exKey, JSON.stringify(hist));
+            Haptics.success();
+            
+            document.getElementById('man-hist-w').value = "";
+            document.getElementById('man-hist-r').value = "";
+            
+            renderHistoryContent();
+            renderLandscapeGraphs();
+            if (document.getElementById('active-workout-view').classList.contains('active-view')) {
+                if (AppState.workout.active && getExKey(AppState.workout.active.exercises[AppState.workout.curIdx].name) === AppState.historyModal.exKey) renderMiniChart(AppState.historyModal.exKey);
+            }
+        }
+
+        function generateGraphHTML(hist, isLandscape) {
+            let plotData = hist.slice(isLandscape ? -30 : -15); 
+            const svgW = isLandscape ? 600 : 340; const svgH = isLandscape ? 260 : 190;
+            const paddingLeft = 60; const paddingRight = 20; const paddingTop = 20; const paddingBottom = 30;
+            const plotW = svgW - paddingLeft - paddingRight; const plotH = svgH - paddingTop - paddingBottom;
+            
+            let dataMaxW = Math.max(...plotData.map(h => parseFloat(h.w))); 
+            let dataMinW = Math.min(...plotData.map(h => parseFloat(h.w)));
+            let dataMaxR = Math.max(...plotData.map(h => parseInt(h.r))); 
+            let dataMinR = Math.min(...plotData.map(h => parseInt(h.r)));
+
+            let isFlatW = dataMaxW === dataMinW;
+            let isFlatR = dataMaxR === dataMinR;
+
+            let maxW = isFlatW ? dataMaxW + 5 : dataMaxW; 
+            let minW = isFlatW ? dataMinW - 5 : dataMinW;
+            let maxR = isFlatR ? dataMaxR + 2 : dataMaxR; 
+            let minR = isFlatR ? dataMinR - 2 : dataMinR;
+
+            let rangeW = maxW - minW; let rangeR = maxR - minR;
+            let displayMaxW = maxW + (rangeW * 0.2); let displayMinW = minW - (rangeW * 0.2);
+            let displayMaxR = maxR + (rangeR * 0.2); let displayMinR = minR - (rangeR * 0.2);
+
+            let pointsW = []; let pointsR = []; let xLabels = [];
+            plotData.forEach((h, i) => {
+                let x = paddingLeft + (i / (plotData.length - 1)) * plotW;
+                let yW = paddingTop + plotH - ((parseFloat(h.w) - displayMinW) / (displayMaxW - displayMinW)) * plotH;
+                let yR = paddingTop + plotH - ((parseInt(h.r) - displayMinR) / (displayMaxR - displayMinR)) * plotH;
+                if (Math.abs(yW - yR) < 3) { yW -= 3; yR += 3; }
+                pointsW.push(`${x},${yW}`); pointsR.push(`${x},${yR}`);
+                
+                let showLabel = isLandscape ? (plotData.length <= 12 || i % 3 === 0 || i === plotData.length - 1) : (plotData.length <= 8 || i % 2 === 0 || i === plotData.length - 1);
+                if (showLabel) { let shortDate = esc(h.date).replace(/\s/g, '').substring(0, 5); xLabels.push(`<text x="${x}" y="${svgH - 5}" fill="#777" font-size="${isLandscape?11:9}" text-anchor="middle" font-weight="600">${shortDate}</text>`); }
+            });
+
+            let midW = (maxW + minW) / 2; let midR = (maxR + minR) / 2;
+            let yPhysicalMax = paddingTop + plotH - ((maxW - displayMinW) / (displayMaxW - displayMinW)) * plotH;
+            let yPhysicalMid = paddingTop + plotH - ((midW - displayMinW) / (displayMaxW - displayMinW)) * plotH;
+            let yPhysicalMin = paddingTop + plotH - ((minW - displayMinW) / (displayMaxW - displayMinW)) * plotH;
+            
+            let labelSize = isLandscape ? "12" : "10"; let slashSize = isLandscape ? "10" : "8";
+            let isTimeBased = plotData.length > 0 && plotData[0].isTime;
+            let rLabel = isTimeBased ? "s" : "";
+            let hasKV = plotData.some(h => h.kv);
+
+            let formatCombinedLabel = (wVal, rVal, isPaddingW, isPaddingR) => {
+                let wStr = "";
+                if (!(isPaddingW && isFlatW)) {
+                    let numW = Number.isInteger(wVal) ? wVal : parseFloat(wVal).toFixed(1);
+                    wStr = hasKV ? (wVal === 0 ? "KV" : (wVal > 0 ? "KV+"+numW : numW)) : numW;
+                }
+                
+                let rStr = "";
+                if (!(isPaddingR && isFlatR)) {
+                    rStr = (Number.isInteger(rVal) ? rVal : parseFloat(rVal).toFixed(1)) + rLabel;
+                }
+
+                if (wStr && rStr) {
+                    return `<tspan fill="var(--accent-train)">${wStr}</tspan><tspan fill="#555" font-size="${slashSize}"> / </tspan><tspan fill="var(--accent-snus)">${rStr}</tspan>`;
+                } else if (wStr) {
+                    return `<tspan fill="var(--accent-train)">${wStr}</tspan>`;
+                } else if (rStr) {
+                    return `<tspan fill="var(--accent-snus)">${rStr}</tspan>`;
+                } else {
+                    return "";
+                }
+            };
+
+            let yLabelsCombined = `
+                <text x="${paddingLeft - 8}" y="${yPhysicalMax + 4}" font-size="${labelSize}" text-anchor="end" font-weight="bold">${formatCombinedLabel(maxW, maxR, true, true)}</text>
+                <text x="${paddingLeft - 8}" y="${yPhysicalMid + 4}" font-size="${labelSize}" text-anchor="end" font-weight="bold">${formatCombinedLabel(midW, midR, false, false)}</text>
+                <text x="${paddingLeft - 8}" y="${yPhysicalMin + 4}" font-size="${labelSize}" text-anchor="end" font-weight="bold">${formatCombinedLabel(minW, minR, true, true)}</text>
+            `;
+
+            return `
+                <div class="svg-chart-container" style="height: ${isLandscape ? '100%' : '220px'}; width: 100%; margin-top: ${isLandscape ? '0' : '10px'}">
+                    <svg viewBox="0 0 ${svgW} ${svgH}" style="width: 100%; height: 100%; overflow: visible; font-family: sans-serif;">
+                        <line x1="${paddingLeft}" y1="${yPhysicalMax}" x2="${paddingLeft + plotW}" y2="${yPhysicalMax}" stroke="#333" stroke-width="1" stroke-dasharray="2" />
+                        <line x1="${paddingLeft}" y1="${yPhysicalMid}" x2="${paddingLeft + plotW}" y2="${yPhysicalMid}" stroke="#222" stroke-width="1" stroke-dasharray="4" />
+                        <line x1="${paddingLeft}" y1="${yPhysicalMin}" x2="${paddingLeft + plotW}" y2="${yPhysicalMin}" stroke="#333" stroke-width="1" stroke-dasharray="2" />
+                        ${yLabelsCombined} ${xLabels.join('')}
+                        <polyline points="${pointsW.join(' ')}" fill="none" stroke="var(--accent-train)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        ${pointsW.map(p => `<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="${isLandscape?5:4}" fill="var(--container-bg)" stroke="var(--accent-train)" stroke-width="2"/>`).join('')}
+                        <polyline points="${pointsR.join(' ')}" fill="none" stroke="var(--accent-snus)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                        ${pointsR.map(p => `<circle cx="${p.split(',')[0]}" cy="${p.split(',')[1]}" r="${isLandscape?5:4}" fill="var(--container-bg)" stroke="var(--accent-snus)" stroke-width="2"/>`).join('')}
+                    </svg>
+                </div>
+            `;
+        }
+
+        function renderHistoryContent() {
+            const contentArea = document.getElementById('history-content-area');
+            let hist = safeJSONParse('TR_hist_' + AppState.historyModal.exKey, []);
+            
+            if (hist.length === 0) { contentArea.innerHTML = '<p class="text-center text-muted" style="margin-top: 30px;">Ingen historikk enda.</p>'; return; }
+
+            if (AppState.historyModal.mode === 'list') {
+                contentArea.innerHTML = hist.slice().reverse().map((h, idx) => {
+                    let realIdx = hist.length - 1 - idx; let prev = hist[realIdx - 1]; 
+                    let trendStr = `<div class="text-center text-muted text-sm" style="width: 16px;">➖</div>`;
+                    if (prev) {
+                        let currentVol = parseFloat(h.w) * parseInt(h.r); let prevVol = parseFloat(prev.w) * parseInt(prev.r);
+                        if (currentVol > prevVol) trendStr = `<div class="text-center text-snus text-sm" style="width: 16px;">▲</div>`; 
+                        if (currentVol < prevVol) trendStr = `<div class="text-center text-red text-sm" style="width: 16px;">▼</div>`; 
+                    }
+                    let oneRmStr = '';
+                    if (!h.isTime && h.w > 0 && h.r > 0) {
+                        let oneRm = Math.round(h.w / (1.0278 - (0.0278 * h.r)));
+                        oneRmStr = `<span class="text-train" style="font-size: 0.65rem; margin-top: 4px;">Est. 1RM: ~${oneRm}kg</span>`;
+                    }
+                    
+                    return `
+                    <div class="history-list-card">
+                        <div class="history-list-left">${trendStr}<div class="history-list-date">${esc(h.date)}</div></div>
+                        <div class="flex-center gap-md">
+                            <div class="history-list-data">
+                                <div>${esc(fmtW(h.w, h.kv))} <span class="text-muted" style="margin: 0 4px;">x</span> ${esc(fmtR(h.r, h.isTime))}</div>
+                                ${oneRmStr}
+                            </div>
+                            <button class="btn-sec text-red flex-center" style="width: 28px; height: 28px; padding: 0; border-radius: 6px; border:none; background:rgba(231,76,60,0.1); font-size: 0.9rem;" data-del-hist="${realIdx}">✕</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            } else {
+                if (hist.length < 2) { contentArea.innerHTML = '<p class="text-center text-muted" style="margin-top: 30px;">Du trenger minst 2 loggføringer for å se grafen.</p>'; return; }
+                let isTime = hist[hist.length-1].isTime;
+                let hasKV = hist.some(h => h.kv); 
+                let legendHtml = `<div class="chart-legend mb-sm"><div class="legend-item"><div class="legend-dot" style="background: var(--accent-train);"></div> Vekt ${hasKV ? '(KV)' : '(kg)'}</div><div class="legend-item"><div class="legend-dot" style="background: var(--accent-snus);"></div> ${isTime ? 'Sekunder' : 'Reps'}</div></div>`;
+                contentArea.innerHTML = legendHtml + generateGraphHTML(hist, false);
+            }
+        }
+
+        function renderLandscapeGraphs() {
+            const container = document.getElementById('ls-scroll-container');
+            let available = getExercisesWithHistory();
+            if(available.length === 0) { container.innerHTML = '<div class="text-muted w-full text-center" style="margin-top: 50px;">Ingen data å vise</div>'; return; }
+
+            container.innerHTML = available.map(ex => {
+                let hist = safeJSONParse('TR_hist_' + ex.key, []);
+                if (hist.length < 2) return `<div class="ls-slide" data-name="${esc(ex.name)}"><p class="text-muted text-center">Trenger 2 økter for å tegne graf for ${esc(ex.name)}</p></div>`;
+                let isTime = hist[hist.length-1].isTime;
+                let hasKV = hist.some(h => h.kv);
+                return `<div class="ls-slide" data-name="${esc(ex.name)}"><div class="chart-legend mb-sm"><div class="legend-item"><div class="legend-dot" style="background: var(--accent-train);"></div> Vekt ${hasKV ? '(KV)' : '(kg)'}</div><div class="legend-item"><div class="legend-dot" style="background: var(--accent-snus);"></div> ${isTime?'Sekunder':'Reps'}</div></div>${generateGraphHTML(hist, true)}</div>`;
+            }).join('');
+
+            const observer = new IntersectionObserver((entries) => { entries.forEach(entry => { if(entry.isIntersecting) document.getElementById('ls-dynamic-title').innerText = entry.target.dataset.name; }); }, { threshold: 0.6 });
+            document.querySelectorAll('.ls-slide').forEach(slide => observer.observe(slide));
+        }
+
+        function deleteHistoryEntry(index) {
+            if(confirm("Er du sikker på at du vil slette denne loggføringen?")) {
+                let hist = safeJSONParse('TR_hist_' + AppState.historyModal.exKey, []);
+                hist.splice(index, 1); safeSetItem('TR_hist_' + AppState.historyModal.exKey, JSON.stringify(hist));
+                renderHistoryContent(); renderLandscapeGraphs();
+                if (document.getElementById('active-workout-view').classList.contains('active-view')) {
+                    if (AppState.workout.active && getExKey(AppState.workout.active.exercises[AppState.workout.curIdx].name) === AppState.historyModal.exKey) {
+                        renderMiniChart(AppState.historyModal.exKey);
+                    }
+                }
+            }
+        }
+
+        function closeHistoryModal() { document.getElementById('history-modal').classList.remove('active'); AppState.historyModal.exKey = null; AppState.historyModal.exName = null; }
+
+        const exGroups = [
+            ["Knebøy", "Frontbøy", "Beinpress", "Bulgarsk utfall", "Goblet Squat", "Knebøyhopp", "Pistol"],
+            ["Markløft", "RDL (Hantler)", "Lårcurl", "Trap-bar mark", "Rumensk markløft", "KB RDL", "Ettbeins Glute Bridge"],
+            ["Benkpress", "Hantelpress", "Skråbenk", "Brystpress maskin", "Push-ups", "Dips", "KB Floor Press"],
+            ["Kabelroing (smalt)", "Stangroing", "Nedtrekk", "1-arm hantelroing", "Pull-ups", "Inverted Rows", "KB Roing"],
+            ["Arnoldpress", "Militærpress", "Sidehev", "Sittende hantelpress", "Skulderpress", "Pike Push-ups", "KB Halo"],
+            ["Facepulls", "Omvendt flyes", "Band pull-aparts", "Rear delt maskin", "Håndkle Sidehev"], 
+            ["Triceps-nedpress", "Franskpress", "Smal benkpress", "Triceps-ekstensjon", "Diamond Push-ups"],
+            ["Bicepscurl", "Hammercurl", "Kabelcurl", "Preacher curl", "Chins (Biceps)", "KB Bicepscurl"],
+            ["Planke", "Toes to bar", "Russian Twists", "Hengende beinhev", "Ab-wheel", "KB Planke-trekk"]
+        ];
+
+        function getAlternatives(name) {
+            if (!name) return []; const n = name.toLowerCase().trim(); let foundGroup = null;
+            for (let group of exGroups) { if (group.some(ex => ex.toLowerCase() === n || n.includes(ex.toLowerCase()))) { foundGroup = group; break; } }
+            if (foundGroup) return foundGroup.filter(ex => ex.toLowerCase() !== n && !n.includes(ex.toLowerCase())).slice(0, 3);
+            return [];
+        }
+
+        function applyAlternative(workoutId, exerciseIndex, newName) { 
+            syncEditorToMemory(); 
+            let ex = AppState.training.program[workoutId].exercises[exerciseIndex];
+            ex.name = newName;
+            loadEditor(); 
+        }
+
+        function syncEditorToMemory() {
+            const id = document.getElementById('edit-select').value;
+            const container = document.getElementById('editor-fields');
+            AppState.training.program[id].exercises.forEach((ex, i) => {
+                const nameEl = container.querySelector(`.edit-name[data-idx="${i}"]`);
+                const setsEl = container.querySelector(`.edit-sets[data-idx="${i}"]`);
+                const repsEl = container.querySelector(`.edit-reps[data-idx="${i}"]`);
+                const restEl = container.querySelector(`.edit-rest[data-idx="${i}"]`);
+                
+                if(nameEl) { 
+                    ex.name = nameEl.value.trim(); 
+                    ex.sets = parseInt(setsEl.value) || 3; 
+                    ex.reps = repsEl.value; 
+                    ex.rest = parseInt(restEl.value) || 60;
+                }
+            });
+        }
+
+        function loadEditor() {
+            const id = document.getElementById('edit-select').value;
+            let html = AppState.training.program[id].exercises.map((ex, i) => {
+                let alts = getAlternatives(ex.name);
+                let altHtml = alts.length > 0 ? `<div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap; align-items:center;"><span class="text-xs text-muted uppercase font-bold">Bytt til:</span>${alts.map(a => `<span class="alt-chip" data-alt-idx="${i}" data-alt-ex="${esc(a)}">${esc(a)}</span>`).join('')}</div>` : '';
+                return `
+                <div style="margin-bottom:12px; border-bottom:1px solid #333; padding-bottom:12px;">
+                    <div class="flex-between mb-sm"><span class="text-xs text-muted font-bold">ØVELSE ${i+1}</span><button class="btn-sec w-auto text-sm btn-danger-outline mb-0" style="padding: 4px 10px; border-radius: 6px; border-color: rgba(231,76,60,0.3);" data-del-ex="${i}">🗑️ Slett</button></div>
+                    <input type="text" value="${esc(ex.name)}" class="edit-name mb-0" data-idx="${i}" placeholder="Navn på øvelse">
+                    ${altHtml}
+                    <div class="flex-center gap-sm mt-sm">
+                        <input type="number" value="${ex.sets}" class="edit-sets mb-0" data-idx="${i}" style="width:25%" placeholder="Sett">
+                        <input type="text" value="${esc(ex.reps)}" class="edit-reps mb-0" data-idx="${i}" style="width:50%" placeholder="Reps">
+                        <input type="number" value="${ex.rest || 60}" class="edit-rest mb-0" data-idx="${i}" style="width:25%" placeholder="Pause(s)">
+                    </div>
+                </div>`;
+            }).join('');
+            html += `<button class="btn btn-sec text-muted mt-sm" style="border: 1.5px dashed #555;" data-add-ex="true">+ Legg til ny øvelse</button>`;
+            document.getElementById('editor-fields').innerHTML = html;
+        }
+
+        function removeExercise(workoutId, index) { if(confirm("Slett øvelse?")) { syncEditorToMemory(); AppState.training.program[workoutId].exercises.splice(index, 1); loadEditor(); } }
+        
+        function addExercise(workoutId) { 
+            syncEditorToMemory(); 
+            AppState.training.program[workoutId].exercises.push({ 
+                name: "Ny øvelse", 
+                sets: 3, 
+                reps: "8-10", 
+                rest: 60 
+            }); 
+            loadEditor(); 
+        }
+        
+        function saveProgram() { 
+            syncEditorToMemory();
+            const id = document.getElementById('edit-select').value;
+            let currentProg = AppState.training.program[id];
+            
+            if(!currentProg || currentProg.exercises.length === 0) {
+                alert("Du kan ikke lagre et tomt program. Legg til minst én øvelse først.");
+                return;
+            }
+            safeSetItem('TR_program', JSON.stringify(AppState.training.program)); 
+            Haptics.success(); 
+            alert("Lagret!"); 
+        }
+        
+        function loadProgramTemplate(type) {
+            if(confirm(`Vil du erstatte programmet ditt med malen "${type}"? Historikken din blir ikke slettet.`)) {
+                let template = defProgram;
+                if (type === 'kroppsvekt') template = bwProgram;
+                if (type === 'kettlebell') template = kbProgram;
+                
+                AppState.training.program = JSON.parse(JSON.stringify(template));
+                safeSetItem('TR_program', JSON.stringify(AppState.training.program));
+                loadEditor();
+                Haptics.success();
+            }
+        }
+
+        function exportData(type) {
+            let d = {}; let filename = 'SnusFit_Backup.json';
+            
+            if (type === 'full') {
+                d = { snus: AppState.snus, goal: AppState.training.goal, program: AppState.training.program, raw: {...localStorage} };
+                filename = 'SnusFit_Full_Backup.json';
+            } else if (type === 'history') {
+                let histRaw = {};
+                Object.keys(localStorage).forEach(k => {
+                    if (k.startsWith('TR_hist_') || k.startsWith('TR_w_') || k.startsWith('TR_r_') || k.startsWith('TR_kv_') || k.startsWith('SB_')) {
+                        histRaw[k] = localStorage.getItem(k);
+                    }
+                });
+                d = { raw: histRaw };
+                filename = 'SnusFit_Historikk.json';
+            } else if (type === 'program') {
+                d = { raw: { 'TR_program': localStorage.getItem('TR_program') } };
+                filename = 'SnusFit_Program.json';
+            }
+            
+            const blob = new Blob([JSON.stringify(d)], {type:'application/json'}); 
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+        }
+
+        function importAllData(e) { 
+            const r = new FileReader(); 
+            r.onload = (ev) => { 
+                try {
+                    const d = JSON.parse(ev.target.result); 
+                    if (d.raw && (d.raw['SB_total'] !== undefined || Object.keys(d.raw).some(k => k.startsWith('TR_')))) {
+                        Object.keys(d.raw).forEach(k => safeSetItem(k, d.raw[k])); 
+                        alert("Backup lastet inn! Trykk OK for å laste siden på nytt.");
+                        location.reload(); 
+                    } else { 
+                        alert("Ugyldig fil. Fant ikke gjenkjennelig SnusFit-data. Ingenting ble overskrevet."); 
+                    }
+                } catch (err) { alert("Kunne ikke lese filen."); }
+            }; 
+            r.readAsText(e.target.files[0]); 
+            e.target.value = ''; 
+        }
+
+        function openWorkoutModal() { document.getElementById('workout-modal').classList.add('active'); document.getElementById('snusDate').valueAsDate = new Date(); }
+        function closeWorkoutModal() { document.getElementById('workout-modal').classList.remove('active'); }
+        function submitManualWorkout() { changeSnus(1, true, document.getElementById('workoutSelect').value); closeWorkoutModal(); }
+
+        function openWithdrawModal() { if(AppState.snus.total <= 0) return alert("Banken er tom!"); AppState.withdraw.amount = 1; document.getElementById('withdraw-display').innerText = AppState.withdraw.amount; document.getElementById('withdraw-modal').classList.add('active'); }
+        function closeWithdrawModal() { document.getElementById('withdraw-modal').classList.remove('active'); cancelHold(); }
+        function adjustWithdraw(c) { let n = AppState.withdraw.amount + c; if (n >= 1 && n <= AppState.snus.total) { AppState.withdraw.amount = n; document.getElementById('withdraw-display').innerText = AppState.withdraw.amount; Haptics.tick(); } }
+
+        const holdBtn = document.getElementById('hold-withdraw-btn'); const progressEl = document.getElementById('withdraw-progress');
+        function startHold() {
+            if (AppState.withdraw.isHolding) return; AppState.withdraw.isHolding = true; AppState.withdraw.holdStartTime = Date.now(); AppState.withdraw.lastTickTime = AppState.withdraw.holdStartTime; Haptics.tick();
+            function loop() {
+                if (!AppState.withdraw.isHolding) return;
+                const progress = Math.min(((Date.now() - AppState.withdraw.holdStartTime) / 3000) * 100, 100); progressEl.style.width = progress + '%';
+                if (Date.now() - AppState.withdraw.lastTickTime >= 250 && progress < 100) { Haptics.tick(); AppState.withdraw.lastTickTime = Date.now(); }
+                if (progress >= 100) { AppState.withdraw.isHolding = false; Haptics.heavy(); changeSnus(-AppState.withdraw.amount, false, "💸 Uttak"); closeWithdrawModal(); } 
+                else { AppState.withdraw.raf = requestAnimationFrame(loop); }
+            }
+            AppState.withdraw.raf = requestAnimationFrame(loop);
+        }
+        function cancelHold() { AppState.withdraw.isHolding = false; cancelAnimationFrame(AppState.withdraw.raf); if(progressEl) progressEl.style.width = '0%'; }
+
+        function setupEventListeners() {
+            const listen = (id, fn) => { const el = document.getElementById(id); if(el) el.addEventListener('click', fn); };
+            
+            listen('btn-pause-streak', toggleSnusPause);
+            listen('btn-withdraw-open', openWithdrawModal);
+            listen('btn-workout-modal-open', openWorkoutModal);
+            listen('btn-history-modal-open', openHistoryModalDefault);
+            listen('btn-save-program', saveProgram);
+            listen('btn-import-click', () => document.getElementById('importFile').click());
+            listen('btn-swap-ex', swapCurrentExercise);
+            listen('btn-skip-ex', skipExercise);
+            listen('btn-stop-workout', () => { if(confirm('Er du sikker på at du vil avslutte økten?')) stopWorkout(); });
+            listen('btn-sw-start', toggleStopwatch);
+            listen('btn-sw-reset', resetStopwatch);
+            listen('kv-toggle', toggleKV);
+            listen('complete-btn', completeSet);
+            listen('btn-skip-rest', skipRest);
+            listen('btn-close-eq', closeEquipmentModal);
+            listen('btn-add-man-hist', addManualHistory);
+            listen('btn-close-hist', closeHistoryModal);
+            listen('btn-submit-manual-workout', submitManualWorkout);
+            listen('btn-close-workout-modal', closeWorkoutModal);
+            listen('btn-close-withdraw', closeWithdrawModal);
+            
+            listen('btn-cardio-playpause', toggleCardio);
+            listen('btn-cardio-skip', skipCardioStep);
+            listen('btn-cardio-finish', finishCardioSession);
+            listen('btn-cardio-cancel', () => {
+                if(confirm("Er du sikker på at du vil avbryte kardioøkten?")) {
+                    clearInterval(cardioState.interval);
+                    cardioState.running = false;
+                    updateWakeLock();
+                    showTab('train-view');
+                }
+            });
+            
+            const histKvToggle = document.getElementById('man-hist-kv');
+            if(histKvToggle) histKvToggle.addEventListener('click', function() { this.classList.toggle('btn-toggle-active'); });
+
+            document.getElementById('goal-input').addEventListener('change', (e) => updateGoal(e.target.value));
+            document.getElementById('edit-select').addEventListener('change', loadEditor);
+            document.getElementById('importFile').addEventListener('change', importAllData);
+
+            document.addEventListener('change', (e) => {
+                if (e.target.closest('#editor-fields')) { syncEditorToMemory(); loadEditor(); }
+            });
+
+            document.addEventListener('mousedown', (e) => {
+                let btn = e.target.closest('[data-alt-ex]');
+                if (btn) {
+                    e.preventDefault();
+                    applyAlternative(document.getElementById('edit-select').value, parseInt(btn.dataset.altIdx), btn.dataset.altEx);
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                let btn;
+                if ((btn = e.target.closest('[data-tab]'))) showTab(btn.dataset.tab);
+                else if ((btn = e.target.closest('[data-prompt-eq]'))) promptEquipmentSelection(btn.dataset.promptEq);
+                else if ((btn = e.target.closest('[data-prompt-bonus]'))) document.getElementById('bonus-choice-modal').classList.add('active');
+                else if ((btn = e.target.closest('[data-bonus-choice]'))) {
+                    document.getElementById('bonus-choice-modal').classList.remove('active');
+                    let type = btn.dataset.bonusChoice;
+                    if(type === 'styrke') promptEquipmentSelection('bonus');
+                    else if(type === 'kardio') showTab('cardio-menu-view');
+                }
+                else if ((btn = e.target.closest('[data-start-cardio]'))) startCardio(parseInt(btn.dataset.startCardio));
+                else if ((btn = e.target.closest('[data-template]'))) loadProgramTemplate(btn.dataset.template);
+                else if ((btn = e.target.closest('[data-export]'))) exportData(btn.dataset.export);
+                else if ((btn = e.target.closest('[data-weight-adj]'))) adjustWeight(parseFloat(btn.dataset.weightAdj));
+                else if ((btn = e.target.closest('[data-reps-adj]'))) adjustWorkoutReps(parseInt(btn.dataset.repsAdj));
+                else if ((btn = e.target.closest('[data-eq]'))) confirmEquipment(btn.dataset.eq);
+                else if ((btn = e.target.closest('[data-hist-view]'))) switchHistoryView(btn.dataset.histView);
+                else if ((btn = e.target.closest('[data-withdraw-adj]'))) adjustWithdraw(parseInt(btn.dataset.withdrawAdj));
+                else if ((btn = e.target.closest('[data-del-snus]'))) deleteEntry(parseInt(btn.dataset.delSnus));
+                else if ((btn = e.target.closest('[data-timeline-idx]'))) { AppState.workout.curIdx = parseInt(btn.dataset.timelineIdx); renderEx(); }
+                else if ((btn = e.target.closest('[data-ex-key]'))) changeHistoryExerciseTile(btn.dataset.exKey, btn.dataset.exName, btn);
+                else if ((btn = e.target.closest('[data-del-hist]'))) deleteHistoryEntry(parseInt(btn.dataset.delHist));
+                else if ((btn = e.target.closest('[data-del-ex]'))) removeExercise(document.getElementById('edit-select').value, parseInt(btn.dataset.delEx));
+                else if ((btn = e.target.closest('[data-add-ex]'))) addExercise(document.getElementById('edit-select').value);
+            });
+            
+            holdBtn.addEventListener('mousedown', startHold); 
+            holdBtn.addEventListener('touchstart', startHold, {passive: true});
+            window.addEventListener('mouseup', cancelHold); 
+            window.addEventListener('touchend', cancelHold);
+            window.addEventListener('touchcancel', cancelHold);
+        }
+    </script>
+</body>
+</html>
